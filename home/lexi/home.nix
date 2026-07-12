@@ -79,7 +79,29 @@ in
       name = "Papirus-Dark";
       package = pkgs.papirus-icon-theme;
     };
+    gtk3.bookmarks = [
+      "file:///home/lexi/Documents Documents"
+      "file:///home/lexi/Downloads Downloads"
+      "file:///home/lexi/Music Music"
+      "file:///home/lexi/Pictures Pictures"
+      "file:///home/lexi/Projects Projects"
+      "file:///home/lexi/Public Public"
+      "file:///home/lexi/Templates Templates"
+      "file:///home/lexi/Videos Videos"
+    ];
   };
+
+  xfconf.settings.thunar.hidden-devices = [
+    "Desktop"
+    "Documents"
+    "Downloads"
+    "Music"
+    "Pictures"
+    "Projects"
+    "Public"
+    "Templates"
+    "Videos"
+  ];
 
   home.packages = [ nixwaySwitch ] ++ (with pkgs; [
       bat

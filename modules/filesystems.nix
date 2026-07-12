@@ -12,7 +12,6 @@ let
     fsType = "none";
     options = [
       "bind"
-      "x-gvfs-hide"
       "x-systemd.requires-mounts-for=/mnt/data/home"
     ];
   };
