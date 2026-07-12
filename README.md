@@ -296,6 +296,21 @@ that LT/RT now move only the trigger indicators and the right stick returns to
 the center. For the original raw kernel event codes, stop the remapper first and
 then run `nix shell nixpkgs#evtest -c evtest`.
 
+XIVLauncher's managed Wine otherwise enumerates the physical Raiju and virtual
+controller through several Wine controller backends. The packaged launcher is
+therefore given SDL2 at runtime, has SDL HIDAPI disabled, and restricts SDL to
+`/dev/input/by-id/razer-raiju-remapped`. Configure a new or restored Wine prefix
+once, while XIVLauncher and FFXIV are closed:
+
+```bash
+xiv-controller-setup
+```
+
+This disables Wine's direct hidraw and evdev controller paths, enables its SDL
+backend, and maps the single normalized controller to XInput. Run the command
+again after replacing or recreating `~/.xlcore/wineprefix`. Steam Input is not
+required for this path.
+
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
 ```text

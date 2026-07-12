@@ -67,6 +67,55 @@ let
       exec ${pkgs.sdl-jstest}/bin/sdl2-jstest --gamecontroller "$remapped_index"
     '';
   };
+
+  xivlauncherWithController = pkgs.symlinkJoin {
+    name = "xivlauncher-with-controller";
+    paths = [ pkgs.xivlauncher ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/XIVLauncher.Core \
+        --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ pkgs.sdl2-compat ]} \
+        --set SDL_JOYSTICK_HIDAPI 0 \
+        --set SDL_JOYSTICK_DEVICE /dev/input/by-id/razer-raiju-remapped
+    '';
+  };
+
+  xivControllerSetup = pkgs.writeShellApplication {
+    name = "xiv-controller-setup";
+    runtimeInputs = with pkgs; [
+      procps
+      steam-run
+    ];
+    text = ''
+      if pgrep -u "$UID" -f '[w]ineserver' >/dev/null; then
+        echo "Close XIVLauncher and FFXIV before configuring the Wine controller backend." >&2
+        exit 1
+      fi
+
+      wine_binaries=("$HOME"/.xlcore/compatibilitytool/wine/*/bin/wine)
+      if [[ ! -x "''${wine_binaries[0]}" ]]; then
+        echo "XIVLauncher's managed Wine installation was not found." >&2
+        echo "Start XIVLauncher once so it can install Wine, then run this command again." >&2
+        exit 1
+      fi
+
+      export WINEPREFIX="$HOME/.xlcore/wineprefix"
+      export LD_LIBRARY_PATH="${lib.makeLibraryPath [ pkgs.sdl2-compat ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+      export SDL_JOYSTICK_HIDAPI=0
+      export SDL_JOYSTICK_DEVICE=/dev/input/by-id/razer-raiju-remapped
+
+      wine="''${wine_binaries[-1]}"
+      wine_root="''${wine%/bin/wine}"
+      registry='HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\winebus'
+
+      for value in DisableHidraw DisableInput 'Enable SDL' 'Map Controllers'; do
+        steam-run "$wine" reg add "$registry" /v "$value" /t REG_DWORD /d 1 /f
+      done
+
+      steam-run "$wine_root/bin/wineserver" -k || true
+      echo "XIVLauncher Wine will now expose only the remapped Raiju through XInput."
+    '';
+  };
 in
 
 {
@@ -144,7 +193,12 @@ in
     ];
   };
 
-  home.packages = [ nixwaySwitch controllerTest ] ++ (with pkgs; [
+  home.packages = [
+    nixwaySwitch
+    controllerTest
+    xivControllerSetup
+    xivlauncherWithController
+  ] ++ (with pkgs; [
       bat
       discord
       eza
@@ -154,7 +208,6 @@ in
       htop
       rustup
       tree
-      xivlauncher
       zed-editor
     ]);
 
