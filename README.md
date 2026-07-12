@@ -280,9 +280,11 @@ service exclusively grabs that raw device and exposes a normalized virtual
 controller named `Razer-Raiju-Tournament-Edition-remapped`. This fixes the axes
 and button order before Steam, browsers, or games receive any input. The service
 starts automatically whenever USB controller `1532:1007` is connected and exits
-when it is unplugged. Steam's PS4 HIDAPI backend remains disabled so it cannot
-bypass the normalized evdev device through the original controller's raw HID
-interface.
+when it is unplugged. A udev rule removes user-session access from only the
+physical Raiju's evdev, joystick, and hidraw nodes, preventing applications from
+listing both the raw and normalized devices. Steam also ignores HIDAPI for this
+specific USB ID so it cannot bypass the remapper. Other controllers retain their
+normal kernel, SDL, and Steam Input handling.
 
 With Steam fully closed, inspect the mapped controller visually with:
 
@@ -296,20 +298,20 @@ that LT/RT now move only the trigger indicators and the right stick returns to
 the center. For the original raw kernel event codes, stop the remapper first and
 then run `nix shell nixpkgs#evtest -c evtest`.
 
-XIVLauncher's managed Wine otherwise enumerates the physical Raiju and virtual
-controller through several Wine controller backends. The packaged launcher is
-therefore given SDL2 at runtime, has SDL HIDAPI disabled, and restricts SDL to
-`/dev/input/by-id/razer-raiju-remapped`. Configure a new or restored Wine prefix
-once, while XIVLauncher and FFXIV are closed:
+XIVLauncher's managed Wine otherwise enumerates controllers through several Wine
+backends. The packaged launcher is therefore given SDL2 at runtime and ignores
+HIDAPI for only the physical Raiju. It does not restrict SDL to a device list, so
+additional controllers continue to be discovered normally. Configure a new or
+restored Wine prefix once, while XIVLauncher and FFXIV are closed:
 
 ```bash
 xiv-controller-setup
 ```
 
-This disables Wine's direct hidraw and evdev controller paths, enables its SDL
-backend, and maps the single normalized controller to XInput. Run the command
-again after replacing or recreating `~/.xlcore/wineprefix`. Steam Input is not
-required for this path.
+This disables Wine's duplicate direct hidraw and evdev paths, enables its SDL
+backend, and maps SDL controllers to XInput. Run the command again after
+replacing or recreating `~/.xlcore/wineprefix`. Steam Input is not required for
+native XIVLauncher, but remains available when launching through Steam.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 

@@ -106,6 +106,21 @@
     ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{id/vendor}=="1532", ATTRS{id/product}=="1007", ENV{ID_INPUT_JOYSTICK}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="razer-raiju-remap@%k.service"
   '';
 
+  # Steam's standard rule grants the session direct access to the physical
+  # Raiju. Remove that access before 73-seat-late.rules applies uaccess: the
+  # root remapper still reads it, while applications see only its normalized
+  # virtual output. Other controllers remain untouched.
+  services.udev.packages = [
+    (pkgs.writeTextFile {
+      name = "razer-raiju-hide-physical-rules";
+      destination = "/lib/udev/rules.d/72-razer-raiju-hide-physical.rules";
+      text = ''
+        ACTION!="remove", SUBSYSTEM=="input", KERNEL=="event*|js*", ATTRS{id/vendor}=="1532", ATTRS{id/product}=="1007", MODE="0600", GROUP="root", TAG-="uaccess"
+        ACTION!="remove", SUBSYSTEM=="hidraw", KERNEL=="hidraw*", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="1007", MODE="0600", GROUP="root", TAG-="uaccess"
+      '';
+    })
+  ];
+
   systemd.services."razer-raiju-remap@" = {
     description = "Normalize the Razer Raiju controller at /dev/input/%I";
     serviceConfig = {
@@ -126,7 +141,7 @@
     extest.enable = true;
     package = pkgs.steam.override {
       extraEnv = {
-        SDL_JOYSTICK_HIDAPI_PS4 = "0";
+        SDL_HIDAPI_IGNORE_DEVICES = "0x1532/0x1007";
       };
     };
   };

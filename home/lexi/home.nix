@@ -52,7 +52,7 @@ let
   controllerTest = pkgs.writeShellApplication {
     name = "controller-test";
     text = ''
-      export SDL_JOYSTICK_HIDAPI_PS4=0
+      export SDL_HIDAPI_IGNORE_DEVICES=0x1532/0x1007
       remapped_index="$(${pkgs.sdl-jstest}/bin/sdl2-jstest --list 2>&1 \
         | ${pkgs.gawk}/bin/awk '\
             /Joystick Name:/ { remapped = /Razer-Raiju-Tournament-Edition-remapped/ } \
@@ -75,8 +75,7 @@ let
     postBuild = ''
       wrapProgram $out/bin/XIVLauncher.Core \
         --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ pkgs.sdl2-compat ]} \
-        --set SDL_JOYSTICK_HIDAPI 0 \
-        --set SDL_JOYSTICK_DEVICE /dev/input/by-id/razer-raiju-remapped
+        --set SDL_HIDAPI_IGNORE_DEVICES 0x1532/0x1007
     '';
   };
 
@@ -101,8 +100,6 @@ let
 
       export WINEPREFIX="$HOME/.xlcore/wineprefix"
       export LD_LIBRARY_PATH="${lib.makeLibraryPath [ pkgs.sdl2-compat ]}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-      export SDL_JOYSTICK_HIDAPI=0
-      export SDL_JOYSTICK_DEVICE=/dev/input/by-id/razer-raiju-remapped
 
       wine="''${wine_binaries[-1]}"
       wine_root="''${wine%/bin/wine}"
