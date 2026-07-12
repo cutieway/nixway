@@ -94,6 +94,8 @@ in
   xfconf.settings.thunar = {
     hidden-bookmarks = [
       "computer:///"
+      "file:///home/lexi/Desktop"
+      "network:///"
       "recent:///"
     ];
     hidden-devices = [
