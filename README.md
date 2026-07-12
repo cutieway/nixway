@@ -233,6 +233,19 @@ The repository's `AGENTS.md` gives each new Codex session the important machine 
 
 No Node.js, npm, or Bun runtime is needed for this standalone build. They are therefore not installed merely for Codex. This is the one deliberately non-declarative application in the initial setup: as of 2026-07-10, the pinned NixOS package is Codex `0.133.0` and `nixos-unstable` has `0.142.5`, while OpenAI has [released `0.144.1`](https://github.com/openai/codex/releases/tag/rust-v0.144.1). The fast release cadence makes the official installer the more reliable way to keep this particular tool current.
 
+### XIVLauncher data
+
+XIVLauncher uses its normal paths under `~/.xlcore`, but Home Manager links the
+large game and selected configuration directories to the preserved data
+partition through `/home/lexi/Public/xlcore`:
+
+- `~/.xlcore/ffxiv` → `/home/lexi/Public/xlcore/ffxiv`
+- `~/.xlcore/ffxivConfig` → `/home/lexi/Public/xlcore/ffxivConfig`
+- `~/.xlcore/pluginConfigs` → `/home/lexi/Public/xlcore/pluginConfigs`
+
+Other XIVLauncher state remains local under `~/.xlcore`; credentials are stored
+separately by GNOME Keyring.
+
 ## Media and codecs
 
 PipeWire routes and mixes audio; applications decode media. Nix applications normally include the codec libraries they need, so a global codec pack is not required. MPV and the standard FFmpeg build cover common formats such as MP3, AAC, FLAC, Opus, Vorbis, H.264, and H.265.

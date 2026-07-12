@@ -56,6 +56,15 @@ in
   home.stateVersion = "26.05";
   home.sessionPath = [ "$HOME/.local/bin" ];
 
+  home.file = {
+    ".xlcore/ffxiv".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/ffxiv";
+    ".xlcore/ffxivConfig".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/ffxivConfig";
+    ".xlcore/pluginConfigs".source =
+      config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/pluginConfigs";
+  };
+
   home.pointerCursor = {
     enable = true;
     package = pkgs.bibata-cursors;
