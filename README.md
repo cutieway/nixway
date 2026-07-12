@@ -267,7 +267,11 @@ Start Steam from Wofi or a terminal:
 steam
 ```
 
-The NixOS Steam module also enables 32-bit graphics libraries and Steam controller rules. The AMD GPU uses Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed alongside it.
+The NixOS Steam module also enables 32-bit graphics libraries and Steam controller
+rules. `uinput` and Steam's `extest` integration are enabled so Steam Input can
+create and route virtual controller events correctly under Sway. The AMD GPU uses
+Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
+alongside it.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 

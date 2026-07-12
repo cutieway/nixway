@@ -72,7 +72,7 @@
       uid = 1000;
       group = "lexi";
       description = "lexi";
-      extraGroups = [ "wheel" "networkmanager" "video" ];
+      extraGroups = [ "wheel" "networkmanager" "video" "uinput" ];
       shell = pkgs.bashInteractive;
     };
   };
@@ -102,7 +102,11 @@
   programs.gamemode.enable = true;
   programs.nm-applet.enable = true;
   programs.nix-ld.enable = true;
-  programs.steam.enable = true;
+  hardware.uinput.enable = true;
+  programs.steam = {
+    enable = true;
+    extest.enable = true;
+  };
 
   environment.systemPackages = with pkgs; [
     bashInteractive
