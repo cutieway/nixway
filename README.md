@@ -277,7 +277,10 @@ Steam's PS4 HIDAPI backend is disabled specifically for the Steam process. The
 Razer Raiju Tournament Edition reports correct inputs through Linux evdev, while
 Steam's HIDAPI path assigns its triggers and right-stick axes incorrectly. Steam
 Input therefore consumes the working evdev device before creating its virtual
-gamepad; other applications retain their normal controller backends.
+gamepad. A Steam-only SDL mapping for the resulting evdev GUID supplies the
+correct Raiju face buttons, Guide button, triggers, and stick axes. The mapping
+was verified with `sdl2-jstest`; other applications retain their normal controller
+backends.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
