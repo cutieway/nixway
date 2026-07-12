@@ -240,10 +240,10 @@ in
           bg = "${palette.base00} solid_color";
         };
         "DP-1" = {
-          pos = "0 0";
+          pos = "0 1080";
         };
         "HDMI-A-1" = {
-          pos = "0 -1080";
+          pos = "0 0";
         };
       };
 
