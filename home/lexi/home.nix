@@ -474,7 +474,7 @@ in
       main = {
         font = "JetBrainsMono Nerd Font:size=11";
       };
-      colors = {
+      colors-dark = {
         background = "262427";
         foreground = "fcfcfc";
         regular0 = "262427";
