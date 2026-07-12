@@ -109,6 +109,27 @@ in
         };
       };
 
+      output = {
+        "DP-1" = {
+          pos = "0 0";
+        };
+        "HDMI-A-1" = {
+          pos = "0 -1080";
+        };
+      };
+
+      workspaceOutputAssign =
+        (map (workspace: {
+          inherit workspace;
+          output = "DP-1";
+        }) [ "1" "2" "3" ])
+        ++ [
+          {
+            workspace = "4";
+            output = "HDMI-A-1";
+          }
+        ];
+
       keybindings =
         let
           mod = config.wayland.windowManager.sway.config.modifier;
