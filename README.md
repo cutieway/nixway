@@ -20,6 +20,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - GNOME Keyring, unlocked by the greetd login, with the GCR SSH agent
 - Screen locking after 10 minutes and display power-off after 15 minutes
 - Steam with its normal Proton support and Feral GameMode
+- XIVLauncher for Final Fantasy XIV, with credentials stored through GNOME Keyring
 - MPV and FFmpeg for common audio/video formats
 - `nh` for system rebuilds
 - Weekly Nix garbage collection and store optimisation

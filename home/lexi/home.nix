@@ -80,6 +80,7 @@ in
       package = pkgs.papirus-icon-theme;
     };
     gtk3.bookmarks = [
+      "file:///home/lexi/Projects/nixway nixos"
       "file:///home/lexi/Documents Documents"
       "file:///home/lexi/Downloads Downloads"
       "file:///home/lexi/Music Music"
@@ -90,6 +91,9 @@ in
       "file:///home/lexi/Videos Videos"
     ];
   };
+
+  # Thunar may rewrite this file; the Places order is intentionally declarative.
+  xdg.configFile."gtk-3.0/bookmarks".force = true;
 
   xfconf.settings.thunar = {
     hidden-bookmarks = [
@@ -120,6 +124,7 @@ in
       gh
       htop
       tree
+      xivlauncher
     ]);
 
   programs.git = {
