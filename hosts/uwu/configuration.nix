@@ -98,6 +98,24 @@
 
   services.printing.enable = false;
 
+  # The Raiju exposes its right stick as ABS_Z/ABS_RZ and its triggers as
+  # ABS_RX/ABS_RY. Generic Linux gamepad consumers assume the opposite, which
+  # makes the triggers move the right stick. Normalize the complete evdev
+  # layout before Steam and games see it.
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{id/vendor}=="1532", ATTRS{id/product}=="1007", ENV{ID_INPUT_JOYSTICK}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="razer-raiju-remap@%k.service"
+  '';
+
+  systemd.services."razer-raiju-remap@" = {
+    description = "Normalize the Razer Raiju controller at /dev/input/%I";
+    serviceConfig = {
+      Type = "notify";
+      Restart = "on-failure";
+      RestartSec = "1s";
+      ExecStart = "${pkgs.evsieve}/bin/evsieve --input /dev/input/%I grab=force persist=exit --map yield btn:south btn:west --map yield btn:east btn:south --map yield btn:c btn:east --map yield btn:west btn:tl --map yield btn:z btn:tr --map yield btn:tl btn:tl2 --map yield btn:tr btn:tr2 --map yield btn:tl2 btn:select --map yield btn:tr2 btn:start --map yield btn:select btn:thumbl --map yield btn:start btn:thumbr --map yield btn:thumbl btn:mode --block btn:mode --map yield abs:z abs:rx --map yield abs:rz abs:ry --map yield abs:rx abs:z --map yield abs:ry abs:rz --output name=Razer-Raiju-Tournament-Edition-remapped create-link=/dev/input/by-id/razer-raiju-remapped";
+    };
+  };
+
   programs.git.enable = true;
   programs.gamemode.enable = true;
   programs.nm-applet.enable = true;
@@ -109,8 +127,6 @@
     package = pkgs.steam.override {
       extraEnv = {
         SDL_JOYSTICK_HIDAPI_PS4 = "0";
-        SDL_GAMECONTROLLERCONFIG =
-          "0300d5eb321500000710000000010000,Razer Raiju Tournament Edition Wired,a:b1,b:b2,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b13,leftshoulder:b4,leftstick:b10,lefttrigger:a3,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:a4,rightx:a2,righty:a5,start:b9,x:b0,y:b3,platform:Linux,";
       };
     };
   };

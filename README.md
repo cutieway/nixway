@@ -273,14 +273,16 @@ create and route virtual controller events correctly under Sway. The AMD GPU use
 Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
 alongside it.
 
-Steam's PS4 HIDAPI backend is disabled specifically for the Steam process. The
-Razer Raiju Tournament Edition reports correct inputs through Linux evdev, while
-Steam's HIDAPI path assigns its triggers and right-stick axes incorrectly. Steam
-Input therefore consumes the working evdev device before creating its virtual
-gamepad. A Steam-only SDL mapping for the resulting evdev GUID supplies the
-correct Raiju face buttons, Guide button, triggers, and stick axes. The mapping
-was verified with `sdl2-jstest`; other applications retain their normal controller
-backends.
+The Razer Raiju Tournament Edition uses a nonstandard low-level evdev layout:
+its triggers occupy the axis codes normally used by the right stick, while its
+right stick occupies the codes normally used by the triggers. An `evsieve`
+service exclusively grabs that raw device and exposes a normalized virtual
+controller named `Razer-Raiju-Tournament-Edition-remapped`. This fixes the axes
+and button order before Steam, browsers, or games receive any input. The service
+starts automatically whenever USB controller `1532:1007` is connected and exits
+when it is unplugged. Steam's PS4 HIDAPI backend remains disabled so it cannot
+bypass the normalized evdev device through the original controller's raw HID
+interface.
 
 With Steam fully closed, inspect the mapped controller visually with:
 
@@ -288,9 +290,11 @@ With Steam fully closed, inspect the mapped controller visually with:
 controller-test
 ```
 
-This opens SDL's graphical GameController tester using the same Raiju mapping as
-Steam. For the raw kernel event codes instead, run `nix shell nixpkgs#evtest -c
-evtest` and select the Razer event device.
+This opens SDL's graphical GameController tester and selects the normalized
+Raiju by name. <https://hardwaretester.com/gamepad> is also useful for confirming
+that LT/RT now move only the trigger indicators and the right stick returns to
+the center. For the original raw kernel event codes, stop the remapper first and
+then run `nix shell nixpkgs#evtest -c evtest`.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
