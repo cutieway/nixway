@@ -395,6 +395,10 @@ The process named `lxqt-policykit-agent` is only the small graphical polkit prom
 - `Templates`
 - `Videos`
 
+The bind mounts use `x-gvfs-hide`, so graphical file managers present these as
+normal home directories instead of duplicating them under removable devices.
+This only changes their presentation; their contents still live on `/dev/sda5`.
+
 The data partition is never formatted by this guide.
 
 ## Hardware and Windows notes
