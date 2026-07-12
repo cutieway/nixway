@@ -1,6 +1,25 @@
 { config, lib, pkgs, ... }:
 
 let
+  palette = {
+    base00 = "#262427";
+    base01 = "#3b393c";
+    base02 = "#514f52";
+    base03 = "#676567";
+    base04 = "#7c7b7d";
+    base05 = "#fcfcfc";
+    base06 = "#eae9eb";
+    base07 = "#fcfcfc";
+    base08 = "#ff7272";
+    base09 = "#fc9d6f";
+    base0A = "#ffca58";
+    base0B = "#bcdf59";
+    base0C = "#aee8f4";
+    base0D = "#49cae4";
+    base0E = "#a093e2";
+    base0F = "#ff8787";
+  };
+
   nixwaySwitch = pkgs.writeShellApplication {
     name = "nixway-switch";
     runtimeInputs = with pkgs; [
@@ -42,6 +61,10 @@ in
   gtk = {
     enable = true;
     colorScheme = "dark";
+    theme = {
+      name = "Colloid-Dark";
+      package = pkgs.colloid-gtk-theme;
+    };
   };
 
   home.packages = [ nixwaySwitch ] ++ (with pkgs; [
@@ -98,6 +121,45 @@ in
       terminal = "foot";
       menu = "wofi --show drun";
 
+      colors = {
+        background = palette.base00;
+        focused = {
+          border = palette.base0D;
+          background = palette.base01;
+          text = palette.base05;
+          indicator = palette.base0B;
+          childBorder = palette.base0D;
+        };
+        focusedInactive = {
+          border = palette.base02;
+          background = palette.base01;
+          text = palette.base06;
+          indicator = palette.base03;
+          childBorder = palette.base02;
+        };
+        unfocused = {
+          border = palette.base01;
+          background = palette.base00;
+          text = palette.base04;
+          indicator = palette.base01;
+          childBorder = palette.base01;
+        };
+        urgent = {
+          border = palette.base08;
+          background = palette.base08;
+          text = palette.base00;
+          indicator = palette.base09;
+          childBorder = palette.base08;
+        };
+        placeholder = {
+          border = palette.base02;
+          background = palette.base00;
+          text = palette.base05;
+          indicator = palette.base03;
+          childBorder = palette.base02;
+        };
+      };
+
       startup = [
         { command = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent"; }
       ];
@@ -115,6 +177,9 @@ in
       };
 
       output = {
+        "*" = {
+          bg = "${palette.base00} solid_color";
+        };
         "DP-1" = {
           pos = "0 0";
         };
@@ -160,7 +225,17 @@ in
   programs.swaylock = {
     enable = true;
     settings = {
-      color = "1e1e2e";
+      color = "262427";
+      inside-color = "3b393ccc";
+      inside-ver-color = "3b393ccc";
+      inside-wrong-color = "ff7272cc";
+      key-hl-color = "bcdf59";
+      line-color = "00000000";
+      ring-color = "514f52";
+      ring-ver-color = "49cae4";
+      ring-wrong-color = "ff7272";
+      separator-color = "00000000";
+      text-color = "fcfcfc";
       indicator-caps-lock = true;
       show-failed-attempts = true;
     };
@@ -197,9 +272,107 @@ in
         format = "{:%Y-%m-%d %H:%M}";
       };
     };
+    style = ''
+      * {
+        border: none;
+        border-radius: 0;
+        font-family: "JetBrainsMono Nerd Font";
+        font-size: 13px;
+        min-height: 0;
+      }
+
+      window#waybar {
+        background: ${palette.base00};
+        color: ${palette.base05};
+      }
+
+      #workspaces button {
+        padding: 0 9px;
+        background: transparent;
+        color: ${palette.base04};
+        border-bottom: 2px solid transparent;
+      }
+
+      #workspaces button.focused {
+        background: ${palette.base01};
+        color: ${palette.base05};
+        border-bottom-color: ${palette.base0D};
+      }
+
+      #workspaces button.urgent {
+        background: ${palette.base08};
+        color: ${palette.base00};
+      }
+
+      #mode,
+      #clock,
+      #pulseaudio,
+      #network,
+      #cpu,
+      #memory,
+      #tray {
+        padding: 0 10px;
+      }
+
+      #mode {
+        background: ${palette.base0A};
+        color: ${palette.base00};
+      }
+
+      #pulseaudio.muted,
+      #network.disconnected {
+        color: ${palette.base08};
+      }
+    '';
   };
 
-  services.mako.enable = true;
+  xdg.configFile."wofi/style.css".text = ''
+    window {
+      margin: 0;
+      border: 2px solid ${palette.base0D};
+      border-radius: 8px;
+      background-color: ${palette.base00};
+      color: ${palette.base05};
+      font-family: "JetBrainsMono Nerd Font";
+      font-size: 14px;
+    }
+
+    #input {
+      margin: 10px;
+      padding: 8px;
+      border: 1px solid ${palette.base02};
+      border-radius: 5px;
+      background-color: ${palette.base01};
+      color: ${palette.base05};
+    }
+
+    #entry {
+      padding: 7px 10px;
+      border-radius: 5px;
+    }
+
+    #entry:selected {
+      background-color: ${palette.base02};
+      color: ${palette.base05};
+    }
+
+    #text {
+      margin-left: 8px;
+    }
+  '';
+
+  services.mako = {
+    enable = true;
+    settings = {
+      background-color = palette.base00;
+      text-color = palette.base05;
+      border-color = palette.base0D;
+      progress-color = "over ${palette.base02}";
+      border-radius = 8;
+      border-size = 2;
+      default-timeout = 5000;
+    };
+  };
 
   programs.mpv.enable = true;
 
@@ -208,6 +381,26 @@ in
     settings = {
       main = {
         font = "JetBrainsMono Nerd Font:size=11";
+      };
+      colors = {
+        background = "262427";
+        foreground = "fcfcfc";
+        regular0 = "262427";
+        regular1 = "ff7272";
+        regular2 = "bcdf59";
+        regular3 = "ffca58";
+        regular4 = "49cae4";
+        regular5 = "a093e2";
+        regular6 = "aee8f4";
+        regular7 = "fcfcfc";
+        bright0 = "676567";
+        bright1 = "ff8787";
+        bright2 = "bcdf59";
+        bright3 = "ffca58";
+        bright4 = "49cae4";
+        bright5 = "a093e2";
+        bright6 = "aee8f4";
+        bright7 = "fcfcfc";
       };
     };
   };

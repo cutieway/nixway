@@ -11,6 +11,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - AMD CPU microcode, AMDGPU firmware, 64/32-bit Mesa graphics, and KVM support
 - Fixed UID/GID `1000:1000` so preserved data keeps the correct owner
 - Sway, Waybar, Foot, Wofi, Mako, Firefox, Thunar, and XWayland
+- Colloid Dark for GTK applications and the 0x96f palette for Sway desktop components
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
 - PipeWire/WirePlumber with rtkit
 - NetworkManager with automatic wired DHCP, `nmcli`/`nmtui`, and a tray applet
