@@ -1,0 +1,6 @@
+.direnv/
+.env
+result
+result-*
+*.qcow2
+*.iso
