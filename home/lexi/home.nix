@@ -39,6 +39,11 @@ in
 
   programs.home-manager.enable = true;
 
+  gtk = {
+    enable = true;
+    colorScheme = "dark";
+  };
+
   home.packages = [ nixwaySwitch ] ++ (with pkgs; [
       bat
       eza
