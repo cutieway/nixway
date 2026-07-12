@@ -56,6 +56,16 @@ in
   home.stateVersion = "26.05";
   home.sessionPath = [ "$HOME/.local/bin" ];
 
+  home.pointerCursor = {
+    enable = true;
+    package = pkgs.bibata-cursors;
+    name = "Bibata-Modern-Ice";
+    size = 24;
+    gtk.enable = true;
+    sway.enable = true;
+    x11.enable = true;
+  };
+
   programs.home-manager.enable = true;
 
   gtk = {
@@ -64,6 +74,10 @@ in
     theme = {
       name = "Colloid-Dark";
       package = pkgs.colloid-gtk-theme;
+    };
+    iconTheme = {
+      name = "Papirus-Dark";
+      package = pkgs.papirus-icon-theme;
     };
   };
 
