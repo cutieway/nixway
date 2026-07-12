@@ -273,6 +273,12 @@ create and route virtual controller events correctly under Sway. The AMD GPU use
 Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
 alongside it.
 
+The wired Razer Raiju Tournament Edition has a session-wide SDL mapping override.
+Steam's bundled mapping assigns this controller's guide button, triggers, and
+right-stick axes incorrectly; the override uses its correct upstream Raiju layout
+so Steam Input can remain on its default PlayStation setting without a per-game
+button remap.
+
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
 ```text

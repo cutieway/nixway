@@ -55,6 +55,11 @@ in
   home.homeDirectory = "/home/lexi";
   home.stateVersion = "26.05";
   home.sessionPath = [ "$HOME/.local/bin" ];
+  # Steam's bundled SDL database misidentifies the USB Raiju TE axes/buttons.
+  # Override the exact GUID reported in Steam's controller log with the
+  # upstream Raiju layout so default Steam Input produces a valid gamepad.
+  home.sessionVariables.SDL_GAMECONTROLLERCONFIG =
+    "0300d5eb321500000710000001016800,Razer Raiju Tournament Edition Wired,a:b1,b:b2,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:a3,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:a4,rightx:a2,righty:a5,start:b9,x:b0,y:b3,touchpad:b13,crc:ebd5,platform:Linux,";
 
   home.file = {
     ".xlcore/ffxiv".source =
