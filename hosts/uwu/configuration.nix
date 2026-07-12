@@ -106,6 +106,9 @@
   programs.steam = {
     enable = true;
     extest.enable = true;
+    package = pkgs.steam.override {
+      extraEnv.SDL_JOYSTICK_HIDAPI_PS4 = "0";
+    };
   };
 
   environment.systemPackages = with pkgs; [

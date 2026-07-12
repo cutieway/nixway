@@ -273,6 +273,12 @@ create and route virtual controller events correctly under Sway. The AMD GPU use
 Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
 alongside it.
 
+Steam's PS4 HIDAPI backend is disabled specifically for the Steam process. The
+Razer Raiju Tournament Edition reports correct inputs through Linux evdev, while
+Steam's HIDAPI path assigns its triggers and right-stick axes incorrectly. Steam
+Input therefore consumes the working evdev device before creating its virtual
+gamepad; other applications retain their normal controller backends.
+
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
 ```text
