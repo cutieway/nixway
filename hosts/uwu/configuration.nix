@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, nix-cachyos-kernel, ... }:
 
 {
   imports = [
@@ -7,7 +7,17 @@
 
   system.stateVersion = "26.05";
 
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    substituters = [
+      "https://cache.nixos.org/"
+      "https://cache.xinux.uz"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "cache.xinux.uz:BXCrtqejFjWzWEB9YuGB7X2MV4ttBur1N8BkwQRdH+0="
+    ];
+  };
   nix.optimise = {
     automatic = true;
     dates = [ "weekly" ];
@@ -44,6 +54,8 @@
     timeout = 5;
   };
   boot.supportedFilesystems = [ "btrfs" ];
+  nixpkgs.overlays = [ nix-cachyos-kernel.overlays.pinned ];
+  boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-x86_64-v3;
   boot.kernelParams = [ "quiet" ];
 
   services.fstrim.enable = true;

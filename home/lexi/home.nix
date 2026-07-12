@@ -39,7 +39,7 @@ let
 
       # Flakes ignore untracked files, so stage the complete configuration before building.
       git add -A
-      nh os switch "$@"
+      nh os switch --accept-flake-config "$@"
 
       if ! git diff --cached --quiet; then
         git commit -m "uwu: automatic system rebuild $(date --iso-8601=seconds)"
@@ -155,12 +155,19 @@ in
     shellAliases = {
       ll = "eza -la --group-directories-first";
       rebuild = "nixway-switch";
+      update-kernel = "update_kernel";
       update-system = "update_system";
     };
     initExtra = ''
+      update_kernel() (
+        cd "$NH_FLAKE" || return
+        nix flake update --accept-flake-config nix-cachyos-kernel
+        nixway-switch
+      )
+
       update_system() (
         cd "$NH_FLAKE" || return
-        nix flake update
+        nix flake update --accept-flake-config
         nixway-switch
       )
     '';

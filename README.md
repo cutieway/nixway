@@ -9,6 +9,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - NixOS 26.05, pinned to an exact revision by `flake.lock`
 - Home Manager following the same Nixpkgs release
 - AMD CPU microcode, AMDGPU firmware, 64/32-bit Mesa graphics, and KVM support
+- Latest release-branch CachyOS kernel, optimized for the Ryzen 5 1600's x86-64-v3 instruction set
 - Fixed UID/GID `1000:1000` so preserved data keeps the correct owner
 - Sway, Waybar, Foot, Wofi, Mako, Firefox, Thunar, and XWayland
 - Colloid Dark, Papirus Dark icons, and Bibata Modern Ice cursors
@@ -165,13 +166,13 @@ nix-shell -p git --run 'git clone https://github.com/cutieway/nixway /mnt/etc/ni
 Optionally evaluate the configuration once before installation:
 
 ```bash
-nix --extra-experimental-features 'nix-command flakes' flake check /mnt/etc/nixos
+nix --extra-experimental-features 'nix-command flakes' flake check --accept-flake-config /mnt/etc/nixos
 ```
 
 Install NixOS:
 
 ```bash
-nixos-install --flake /mnt/etc/nixos#uwu
+nixos-install --flake /mnt/etc/nixos#uwu --option accept-flake-config true
 ```
 
 Set the root password when `nixos-install` asks for it. Then set a password for `lexi` before rebooting:
@@ -327,24 +328,51 @@ an automatic timestamped commit and pushes it to `origin`. A failed build is not
 committed or pushed. If the remote push fails, the successful local commit is kept
 and can be pushed later with `git push`.
 
-To update the locked Nixpkgs and Home Manager revisions and rebuild:
+To update all locked inputs—including Nixpkgs, Home Manager, and the CachyOS
+kernel release—and rebuild:
 
 ```bash
 update-system
 ```
 
-That command changes `flake.lock`, then uses the same successful-build commit and
-push workflow.
+To check for and apply only a new successfully built CachyOS kernel release,
+without advancing Nixpkgs or Home Manager, use:
+
+```bash
+update-kernel
+```
+
+Both update commands change `flake.lock`, then use the same successful-build commit
+and push workflow. Ordinary `rebuild` commands keep the exact kernel and package
+revisions already recorded in `flake.lock`; use `update-system` when deliberately
+updating them. The CachyOS kernel comes from the integration's successfully built
+`release` branch and a signed mirror of its binary cache, rather than being
+compiled locally. The mirror is used because the primary cache redirects objects
+to a storage domain blocked by the current network's DNS security filter.
 
 For a validation-only check:
 
 ```bash
 cd /home/lexi/Projects/nixway
-nix flake check
+nix flake check --accept-flake-config
 ```
 
 The wrapper stages new files before evaluation because flakes ignore untracked files.
 Use `nh os switch` directly only when intentionally bypassing automatic Git sync.
+
+When introducing the CachyOS cache to an already running installation for the first
+time, the old Nix daemon does not trust it yet. Fetch the new closure once as root,
+then use the normal wrapper to activate and synchronize it:
+
+```bash
+cd /home/lexi/Projects/nixway
+sudo nixos-rebuild build --flake .#uwu --accept-flake-config
+rebuild
+```
+
+After that first activation, the cache URL and signing key are part of the running
+NixOS configuration, so future `rebuild` and `update-system` commands need no
+special bootstrap step.
 
 Configuration edits do not change the running machine immediately. They take effect only after a successful `nh os switch`, and every successful rebuild creates another system generation that can be rolled back.
 
