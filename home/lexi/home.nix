@@ -133,8 +133,10 @@ in
       ffmpeg
       gh
       htop
+      rustup
       tree
       xivlauncher
+      zed-editor
     ]);
 
   programs.git = {

@@ -277,6 +277,27 @@ gamemoderun %command%
 
 Gamescope, MangoHud, Proton-GE, Protontricks, Remote Play firewall ports, and dedicated-server ports are not enabled initially. They are useful only for specific games or workflows and can be added later without reinstalling NixOS.
 
+## Zed and Rust
+
+Zed and `rustup` are installed for `lexi`. Rust toolchains remain managed by
+`rustup` so the stable compiler can advance independently of the pinned NixOS
+packages. After the first rebuild, install the latest stable toolchain with only
+the minimal profile:
+
+```bash
+rustup set profile minimal
+rustup default stable
+```
+
+Later, update it to the newest stable Rust release with:
+
+```bash
+rustup update stable
+```
+
+The minimal profile contains `rustc`, Cargo, and the standard library. Add extra
+targets or components only when a project needs them.
+
 ## Restore or create GitHub access
 
 If an existing SSH directory was backed up, restore it first:
