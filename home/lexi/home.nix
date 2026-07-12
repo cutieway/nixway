@@ -48,6 +48,15 @@ let
       git push origin HEAD
     '';
   };
+
+  controllerTest = pkgs.writeShellApplication {
+    name = "controller-test";
+    text = ''
+      export SDL_JOYSTICK_HIDAPI_PS4=0
+      export SDL_GAMECONTROLLERCONFIG='0300d5eb321500000710000000010000,Razer Raiju Tournament Edition Wired,a:b1,b:b2,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:a3,leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:a4,rightx:a2,righty:a5,start:b9,x:b0,y:b3,platform:Linux,'
+      exec ${pkgs.sdl-jstest}/bin/sdl2-jstest --gamecontroller 0
+    '';
+  };
 in
 
 {
@@ -125,7 +134,7 @@ in
     ];
   };
 
-  home.packages = [ nixwaySwitch ] ++ (with pkgs; [
+  home.packages = [ nixwaySwitch controllerTest ] ++ (with pkgs; [
       bat
       discord
       eza

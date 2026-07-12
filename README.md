@@ -282,6 +282,16 @@ correct Raiju face buttons, Guide button, triggers, and stick axes. The mapping
 was verified with `sdl2-jstest`; other applications retain their normal controller
 backends.
 
+With Steam fully closed, inspect the mapped controller visually with:
+
+```bash
+controller-test
+```
+
+This opens SDL's graphical GameController tester using the same Raiju mapping as
+Steam. For the raw kernel event codes instead, run `nix shell nixpkgs#evtest -c
+evtest` and select the Razer event device.
+
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
 ```text
