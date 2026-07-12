@@ -406,7 +406,8 @@ If a generation does not boot at all, select an older NixOS generation from the 
 
 ## Sway keys
 
-`Super` is the Windows key.
+`Super` is the Windows key. Caps Lock is also mapped to Super and no longer
+toggles capitalization.
 
 | Key | Action |
 | --- | --- |
@@ -414,9 +415,16 @@ If a generation does not boot at all, select an older NixOS generation from the 
 | `Super+D` | Open application launcher |
 | `Super+E` | Open Thunar |
 | `Super+T` | Toggle split layout |
+| `Super+1` through `Super+5` | Switch to workspace 1 through 5 |
+| `Super+Shift+1` through `Super+Shift+5` | Move the focused window to workspace 1 through 5 |
 | `Super+Ctrl+L` | Lock the session |
 | `Super+Shift+Q` | Close focused window |
 | `Super+Shift+E` | Exit Sway |
+
+Workspaces 1–4 are fixed to the LG display and workspace 5 is fixed to the
+Philips display. Waybar keeps all five visible even while they are empty. On
+login, Sway starts Firefox on workspace 1, Foot on 2, Steam on 3, and Discord on
+4. XIVLauncher and FFXIV are not started automatically, but open on workspace 3.
 | `Print` | Select an area and copy a screenshot |
 
 Standard Sway focus, move, fullscreen, floating, audio, media, and brightness keys are also configured.

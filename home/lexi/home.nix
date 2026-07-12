@@ -127,6 +127,7 @@ in
 
   home.packages = [ nixwaySwitch ] ++ (with pkgs; [
       bat
+      discord
       eza
       fastfetch
       ffmpeg
@@ -179,6 +180,17 @@ in
     package = null;
     systemd.dbusImplementation = "broker";
     extraConfig = ''
+      assign [app_id="^firefox$"] workspace number 1
+      assign [class="(?i)^firefox$"] workspace number 1
+      assign [app_id="^foot$"] workspace number 2
+      assign [class="(?i)^steam$"] workspace number 3
+      assign [app_id="(?i)^XIVLauncher.Core$"] workspace number 3
+      assign [class="(?i)^XIVLauncher.Core$"] workspace number 3
+      assign [class="(?i)^ffxiv_dx11.exe$"] workspace number 3
+      assign [title="(?i)^FINAL FANTASY XIV$"] workspace number 3
+      assign [app_id="(?i)^discord$"] workspace number 4
+      assign [class="(?i)^discord$"] workspace number 4
+
       for_window [app_id="^.*"] inhibit_idle fullscreen
       for_window [class="^.*"] inhibit_idle fullscreen
     '';
@@ -228,6 +240,10 @@ in
 
       startup = [
         { command = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent"; }
+        { command = "${pkgs.firefox}/bin/firefox"; }
+        { command = "${pkgs.foot}/bin/foot"; }
+        { command = "${pkgs.steam}/bin/steam"; }
+        { command = "${pkgs.discord}/bin/discord"; }
       ];
 
       bars = [
@@ -239,6 +255,7 @@ in
       input = {
         "*" = {
           xkb_layout = "us";
+          xkb_options = "caps:super";
         };
       };
 
@@ -258,10 +275,10 @@ in
         (map (workspace: {
           inherit workspace;
           output = "DP-1";
-        }) [ "1" "2" "3" ])
+        }) [ "1" "2" "3" "4" ])
         ++ [
           {
-            workspace = "4";
+            workspace = "5";
             output = "HDMI-A-1";
           }
         ];
@@ -334,6 +351,15 @@ in
       modules-left = [ "sway/workspaces" "sway/mode" ];
       modules-center = [ "clock" ];
       modules-right = [ "pulseaudio" "network" "cpu" "memory" "tray" ];
+      "sway/workspaces" = {
+        persistent-workspaces = {
+          "1" = [ "DP-1" ];
+          "2" = [ "DP-1" ];
+          "3" = [ "DP-1" ];
+          "4" = [ "DP-1" ];
+          "5" = [ "HDMI-A-1" ];
+        };
+      };
       clock = {
         format = "{:%Y-%m-%d %H:%M}";
       };
