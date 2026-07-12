@@ -91,17 +91,24 @@ in
     ];
   };
 
-  xfconf.settings.thunar.hidden-devices = [
-    "Desktop"
-    "Documents"
-    "Downloads"
-    "Music"
-    "Pictures"
-    "Projects"
-    "Public"
-    "Templates"
-    "Videos"
-  ];
+  xfconf.settings.thunar = {
+    hidden-bookmarks = [
+      "computer:///"
+      "recent:///"
+    ];
+    hidden-devices = [
+      "961677EE1677CDAD"
+      "Desktop"
+      "Documents"
+      "Downloads"
+      "Music"
+      "Pictures"
+      "Projects"
+      "Public"
+      "Templates"
+      "Videos"
+    ];
+  };
 
   home.packages = [ nixwaySwitch ] ++ (with pkgs; [
       bat

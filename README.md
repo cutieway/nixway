@@ -395,9 +395,10 @@ The process named `lxqt-policykit-agent` is only the small graphical polkit prom
 - `Templates`
 - `Videos`
 
-Home Manager hides these bind mounts from Thunar's **Devices** section and adds
-their home paths to **Places** instead. This only changes their presentation;
-their contents still live on `/dev/sda5`.
+Home Manager hides these bind mounts and the Windows partition from Thunar's
+**Devices** section, adds the home paths to **Places**, and hides Thunar's
+Computer and Recent shortcuts. This only changes their presentation; the home
+directory contents still live on `/dev/sda5`.
 
 The data partition is never formatted by this guide.
 
