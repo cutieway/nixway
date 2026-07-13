@@ -59,6 +59,16 @@ let
     '';
   };
 
+  # XIVLauncher still requires a wine64 filename, while modern Proton uses a
+  # single WoW64 wine executable. Present an otherwise unchanged Proton tree
+  # with the compatibility name added.
+  protonGeForXivlauncher = pkgs.runCommand "ge-proton-11-1-xivlauncher" { } ''
+    mkdir -p "$out"
+    cp -rsL ${pkgs.proton-ge-bin.steamcompattool}/. "$out/"
+    chmod u+w "$out/files/bin"
+    ln -s wine "$out/files/bin/wine64"
+  '';
+
 in
 
 {
@@ -75,7 +85,7 @@ in
     ".xlcore/pluginConfigs".source =
       config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/pluginConfigs";
     ".xlcore/compatibilitytool/GE-Proton11-1".source =
-      pkgs.proton-ge-bin.steamcompattool;
+      protonGeForXivlauncher;
   };
 
   home.pointerCursor = {
