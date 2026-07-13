@@ -161,6 +161,7 @@ in
       eza
       fastfetch
       ffmpeg
+      gcc
       gh
       htop
       rustup
