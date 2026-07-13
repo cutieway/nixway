@@ -2,8 +2,8 @@
 
 let
   palette = {
-    base00 = "#262427";
-    base01 = "#3b393c";
+    base00 = "#2c2d32";
+    base01 = "#323339";
     base02 = "#514f52";
     base03 = "#676567";
     base04 = "#7c7b7d";
