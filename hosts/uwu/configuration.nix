@@ -107,7 +107,7 @@
   services.udev.packages = [ pkgs.game-devices-udev-rules ];
   programs.steam = {
     enable = true;
-    extest.enable = true;
+    extraCompatPackages = [ pkgs.proton-ge-bin ];
     package = pkgs.steam.override {
       extraEnv = {
         SDL_GAMECONTROLLERTYPE = "0x1532/0x1007=PS4";

@@ -49,6 +49,16 @@ let
     '';
   };
 
+  xivlauncherWrapped = pkgs.symlinkJoin {
+    name = "xivlauncher-wrapped";
+    paths = [ pkgs.xivlauncher ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram "$out/bin/XIVLauncher.Core" \
+        --set SteamVirtualGamepadInfo ""
+    '';
+  };
+
 in
 
 {
@@ -64,6 +74,8 @@ in
       config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/ffxivConfig";
     ".xlcore/pluginConfigs".source =
       config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/pluginConfigs";
+    ".xlcore/compatibilitytool/GE-Proton11-1".source =
+      pkgs.proton-ge-bin.steamcompattool;
   };
 
   home.pointerCursor = {
@@ -128,6 +140,7 @@ in
 
   home.packages = [
     nixwaySwitch
+    xivlauncherWrapped
   ] ++ (with pkgs; [
       bat
       discord
@@ -138,7 +151,6 @@ in
       htop
       rustup
       tree
-      xivlauncher
       zed-editor
     ]);
 

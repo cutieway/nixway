@@ -268,10 +268,9 @@ steam
 ```
 
 The NixOS Steam module also enables 32-bit graphics libraries and Steam controller
-rules. `uinput` and Steam's `extest` integration are enabled so Steam Input can
-create and route virtual controller events correctly under Sway. The AMD GPU uses
-Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
-alongside it.
+rules. `uinput` lets Steam Input create and route virtual controller events under
+Sway. The AMD GPU uses Mesa's RADV Vulkan driver, which is the sensible default;
+AMDVLK is not installed alongside it.
 
 Controller support uses the standard Linux and Steam path. `uinput` lets Steam
 Input create virtual controllers; NixOS's Steam hardware module and the broader
@@ -285,7 +284,19 @@ button/axis layout. Keep the Raiju's physical mode switch in PS4 mode.
 
 For the Raiju, enable PlayStation support in Steam and enable Steam Input for the
 game or XIVLauncher shortcut. Native XIVLauncher without Steam does not receive
-Steam Input's PlayStation-to-XInput translation.
+Steam Input's PlayStation-to-XInput translation. XIVLauncher is wrapped with an
+empty `SteamVirtualGamepadInfo` value to avoid an older Wine/SDL compatibility
+bug that otherwise blacklists Steam's virtual pad under the Raiju's USB ID.
+For a non-Steam FFXIV service account, the game window is identified as Steam
+AppID `312060` (FINAL FANTASY XIV Online Free Trial), so enable Steam Input and
+select the desired gamepad layout for that Steam entry as well as the
+XIVLauncher shortcut.
+
+GE-Proton11-1 is registered with Steam and exposed to XIVLauncher at
+`~/.xlcore/compatibilitytool/GE-Proton11-1`. For a custom XIVLauncher Wine test,
+select `~/.xlcore/compatibilitytool/GE-Proton11-1/files/bin` as the Wine binary
+directory. This changes the compatibility runtime, not the existing
+`~/.xlcore/wineprefix` data directory.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
@@ -293,7 +304,9 @@ Steam includes its normal Proton versions. To run a particular game with GameMod
 gamemoderun %command%
 ```
 
-Gamescope, MangoHud, Proton-GE, Protontricks, Remote Play firewall ports, and dedicated-server ports are not enabled initially. They are useful only for specific games or workflows and can be added later without reinstalling NixOS.
+Gamescope, MangoHud, Protontricks, Remote Play firewall ports, and dedicated-server
+ports are not enabled initially. They are useful only for specific games or
+workflows and can be added later without reinstalling NixOS.
 
 ## Zed and Rust
 
