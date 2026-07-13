@@ -27,6 +27,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - Weekly Nix garbage collection and store optimisation
 - Ten bootable NixOS generations retained in systemd-boot
 - Git, GitHub CLI (`gh`), `curl`, and `~/.local/bin` on `PATH` for the official Codex installer
+- Hermes Agent from its upstream flake, with its complete dependency set pinned by `flake.lock`
 - No Bluetooth, cellular-modem, or printing services
 
 Automatic Btrfs snapshots, Cachix, and further module splitting are intentionally deferred. NixOS generations already provide system rollback, the official Nix cache covers this initial configuration, and the current files are still small enough to remain readable.
@@ -330,6 +331,35 @@ rustup update stable
 The minimal profile contains `rustc`, Cargo, and the standard library. Add extra
 targets or components only when a project needs them.
 
+## Hermes Agent
+
+Hermes Agent is installed from its upstream Nix flake. Its Python, Node.js, and
+other runtime dependencies come from that flake's own lock file and Nix package,
+so they do not depend on whichever library versions the rest of this system uses.
+The complete `default` package is installed, including the optional integrations
+provided by upstream. No Hermes gateway service is enabled by default.
+
+After the first rebuild, perform the interactive setup and then start Hermes:
+
+```bash
+hermes setup
+hermes
+```
+
+Use `hermes doctor` to diagnose configuration or provider problems. Hermes keeps
+mutable configuration, credentials, sessions, and other runtime state under
+`~/.hermes`; that directory is intentionally not managed or committed by this
+repository and should be backed up separately when reinstalling.
+
+To update only Hermes and its pinned upstream dependencies, then rebuild:
+
+```bash
+update-hermes
+```
+
+Use this command rather than Hermes' self-update mechanism. `update-system` also
+updates Hermes because it advances every input in the root `flake.lock`.
+
 ## Restore or create GitHub access
 
 If an existing SSH directory was backed up, restore it first:
@@ -381,8 +411,8 @@ an automatic timestamped commit and pushes it to `origin`. A failed build is not
 committed or pushed. If the remote push fails, the successful local commit is kept
 and can be pushed later with `git push`.
 
-To update all locked inputs—including Nixpkgs, Home Manager, and the CachyOS
-kernel release—and rebuild:
+To update all locked inputs—including Nixpkgs, Home Manager, Hermes Agent, and the
+CachyOS kernel release—and rebuild:
 
 ```bash
 update-system

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, hermes-agent, lib, pkgs, ... }:
 
 let
   palette = {
@@ -150,6 +150,7 @@ in
   };
 
   home.packages = [
+    hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default
     nixwaySwitch
     xivlauncherWrapped
   ] ++ (with pkgs; [
@@ -184,6 +185,7 @@ in
     shellAliases = {
       ll = "eza -la --group-directories-first";
       rebuild = "nixway-switch";
+      update-hermes = "update_hermes";
       update-kernel = "update_kernel";
       update-system = "update_system";
     };
@@ -191,6 +193,12 @@ in
       update_kernel() (
         cd "$NH_FLAKE" || return
         nix flake update --accept-flake-config nix-cachyos-kernel
+        nixway-switch
+      )
+
+      update_hermes() (
+        cd "$NH_FLAKE" || return
+        nix flake update --accept-flake-config hermes-agent
         nixway-switch
       )
 
