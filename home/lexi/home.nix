@@ -164,6 +164,7 @@ in
       gcc
       gh
       htop
+      materialgram
       openssl.dev
       pkg-config
       rustup
