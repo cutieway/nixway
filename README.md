@@ -29,6 +29,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - Ten bootable NixOS generations retained in systemd-boot
 - Git, GitHub CLI (`gh`), `curl`, and `~/.local/bin` on `PATH` for the official Codex installer
 - Bun JavaScript runtime and package manager
+- Command-line ZIP and 7-Zip archive tools
 - Hermes Agent from its upstream flake, with its complete dependency set pinned by `flake.lock`
 - No Bluetooth, cellular-modem, or printing services
 

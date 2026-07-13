@@ -154,6 +154,7 @@ in
     nixwaySwitch
     xivlauncherWrapped
   ] ++ (with pkgs; [
+      _7zz
       bat
       bun
       discord
