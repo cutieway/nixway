@@ -28,6 +28,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - Weekly Nix garbage collection and store optimisation
 - Ten bootable NixOS generations retained in systemd-boot
 - Git, GitHub CLI (`gh`), `curl`, and `~/.local/bin` on `PATH` for the official Codex installer
+- Bun JavaScript runtime and package manager
 - Hermes Agent from its upstream flake, with its complete dependency set pinned by `flake.lock`
 - No Bluetooth, cellular-modem, or printing services
 
@@ -234,7 +235,13 @@ Starting Codex from the repository gives the agent this configuration as its wor
 
 The repository's `AGENTS.md` gives each new Codex session the important machine invariants, disk-safety rules, and validation workflow without depending on this conversation history.
 
-No Node.js, npm, or Bun runtime is needed for this standalone build. They are therefore not installed merely for Codex. This is the one deliberately non-declarative application in the initial setup: as of 2026-07-10, the pinned NixOS package is Codex `0.133.0` and `nixos-unstable` has `0.142.5`, while OpenAI has [released `0.144.1`](https://github.com/openai/codex/releases/tag/rust-v0.144.1). The fast release cadence makes the official installer the more reliable way to keep this particular tool current.
+No Node.js or npm runtime is needed for this standalone build. Bun is installed
+separately as a general development tool, not as a Codex dependency. Codex is the
+one deliberately non-declarative application in the initial setup: as of
+2026-07-10, the pinned NixOS package is Codex `0.133.0` and `nixos-unstable` has
+`0.142.5`, while OpenAI has [released `0.144.1`](https://github.com/openai/codex/releases/tag/rust-v0.144.1).
+The fast release cadence makes the official installer the more reliable way to
+keep this particular tool current.
 
 ### XIVLauncher data
 

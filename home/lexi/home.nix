@@ -155,6 +155,7 @@ in
     xivlauncherWrapped
   ] ++ (with pkgs; [
       bat
+      bun
       discord
       eza
       fastfetch
