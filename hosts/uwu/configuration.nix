@@ -98,52 +98,16 @@
 
   services.printing.enable = false;
 
-  # The Raiju exposes its right stick as ABS_Z/ABS_RZ and its triggers as
-  # ABS_RX/ABS_RY. Generic Linux gamepad consumers assume the opposite, which
-  # makes the triggers move the right stick. Normalize the complete evdev
-  # layout before Steam and games see it.
-  services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="input", KERNEL=="event*", ATTRS{id/vendor}=="1532", ATTRS{id/product}=="1007", ENV{ID_INPUT_JOYSTICK}=="1", TAG+="systemd", ENV{SYSTEMD_WANTS}+="razer-raiju-remap@%k.service"
-  '';
-
-  # Steam's standard rule grants the session direct access to the physical
-  # Raiju. Remove that access before 73-seat-late.rules applies uaccess: the
-  # root remapper still reads it, while applications see only its normalized
-  # virtual output. Other controllers remain untouched.
-  services.udev.packages = [
-    (pkgs.writeTextFile {
-      name = "razer-raiju-hide-physical-rules";
-      destination = "/lib/udev/rules.d/72-razer-raiju-hide-physical.rules";
-      text = ''
-        ACTION!="remove", SUBSYSTEM=="input", KERNEL=="event*|js*", ATTRS{id/vendor}=="1532", ATTRS{id/product}=="1007", MODE="0600", GROUP="root", TAG-="uaccess"
-        ACTION!="remove", SUBSYSTEM=="hidraw", KERNEL=="hidraw*", ATTRS{idVendor}=="1532", ATTRS{idProduct}=="1007", MODE="0600", GROUP="root", TAG-="uaccess"
-      '';
-    })
-  ];
-
-  systemd.services."razer-raiju-remap@" = {
-    description = "Normalize the Razer Raiju controller at /dev/input/%I";
-    serviceConfig = {
-      Type = "notify";
-      Restart = "on-failure";
-      RestartSec = "1s";
-      ExecStart = "${pkgs.evsieve}/bin/evsieve --input /dev/input/%I grab=force persist=exit --map yield btn:south btn:west --map yield btn:east btn:south --map yield btn:c btn:east --map yield btn:west btn:tl --map yield btn:z btn:tr --map yield btn:tl btn:tl2 --map yield btn:tr btn:tr2 --map yield btn:tl2 btn:select --map yield btn:tr2 btn:start --map yield btn:select btn:thumbl --map yield btn:start btn:thumbr --map yield btn:thumbl btn:mode --block btn:mode --map yield abs:z abs:rx --map yield abs:rz abs:ry --map yield abs:rx abs:z --map yield abs:ry abs:rz --output name=Razer-Raiju-Tournament-Edition-remapped create-link=/dev/input/by-id/razer-raiju-remapped";
-    };
-  };
-
   programs.git.enable = true;
   programs.gamemode.enable = true;
   programs.nm-applet.enable = true;
   programs.nix-ld.enable = true;
   hardware.uinput.enable = true;
+  hardware.steam-hardware.enable = true;
+  services.udev.packages = [ pkgs.game-devices-udev-rules ];
   programs.steam = {
     enable = true;
     extest.enable = true;
-    package = pkgs.steam.override {
-      extraEnv = {
-        SDL_HIDAPI_IGNORE_DEVICES = "0x1532/0x1007";
-      };
-    };
   };
 
   environment.systemPackages = with pkgs; [

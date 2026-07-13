@@ -273,45 +273,17 @@ create and route virtual controller events correctly under Sway. The AMD GPU use
 Mesa's RADV Vulkan driver, which is the sensible default; AMDVLK is not installed
 alongside it.
 
-The Razer Raiju Tournament Edition uses a nonstandard low-level evdev layout:
-its triggers occupy the axis codes normally used by the right stick, while its
-right stick occupies the codes normally used by the triggers. An `evsieve`
-service exclusively grabs that raw device and exposes a normalized virtual
-controller named `Razer-Raiju-Tournament-Edition-remapped`. This fixes the axes
-and button order before Steam, browsers, or games receive any input. The service
-starts automatically whenever USB controller `1532:1007` is connected and exits
-when it is unplugged. A udev rule removes user-session access from only the
-physical Raiju's evdev, joystick, and hidraw nodes, preventing applications from
-listing both the raw and normalized devices. Steam also ignores HIDAPI for this
-specific USB ID so it cannot bypass the remapper. Other controllers retain their
-normal kernel, SDL, and Steam Input handling.
+Controller support uses the standard Linux and Steam path. `uinput` lets Steam
+Input create virtual controllers; NixOS's Steam hardware module and the broader
+`game-devices-udev-rules` package grant active-session access to supported raw
+controller interfaces, including the Razer Raiju Tournament Edition
+`1532:1007`. There is no intermediate virtual remapper, so Steam can identify
+the real PlayStation-compatible hardware through hidraw and retain its PS button
+and controller type. Keep the Raiju's physical mode switch in PS4 mode.
 
-With Steam fully closed, inspect the mapped controller visually with:
-
-```bash
-controller-test
-```
-
-This opens SDL's graphical GameController tester and selects the normalized
-Raiju by name. <https://hardwaretester.com/gamepad> is also useful for confirming
-that LT/RT now move only the trigger indicators and the right stick returns to
-the center. For the original raw kernel event codes, stop the remapper first and
-then run `nix shell nixpkgs#evtest -c evtest`.
-
-XIVLauncher's managed Wine otherwise enumerates controllers through several Wine
-backends. The packaged launcher is therefore given SDL2 at runtime and ignores
-HIDAPI for only the physical Raiju. It does not restrict SDL to a device list, so
-additional controllers continue to be discovered normally. Configure a new or
-restored Wine prefix once, while XIVLauncher and FFXIV are closed:
-
-```bash
-xiv-controller-setup
-```
-
-This disables Wine's duplicate direct hidraw and evdev paths, enables its SDL
-backend, and maps SDL controllers to XInput. Run the command again after
-replacing or recreating `~/.xlcore/wineprefix`. Steam Input is not required for
-native XIVLauncher, but remains available when launching through Steam.
+For the Raiju, enable PlayStation support in Steam and enable Steam Input for the
+game or XIVLauncher shortcut. Native XIVLauncher without Steam does not receive
+Steam Input's PlayStation-to-XInput translation.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
