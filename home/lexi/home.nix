@@ -164,6 +164,8 @@ in
       gcc
       gh
       htop
+      openssl.dev
+      pkg-config
       rustup
       tree
       zed-editor
