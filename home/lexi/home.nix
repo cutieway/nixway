@@ -171,6 +171,12 @@ in
       zed-editor
     ]);
 
+  home.sessionVariables = {
+    OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";
+    OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
+    PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+  };
+
   programs.git = {
     enable = true;
     settings = {
