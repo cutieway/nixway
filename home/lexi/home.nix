@@ -15,7 +15,7 @@ let
     base0A = "#ffca58";
     base0B = "#bcdf59";
     base0C = "#aee8f4";
-    base0D = "#49cae4";
+    base0D = "#ca7896";
     base0E = "#a093e2";
     base0F = "#ff8787";
   };
