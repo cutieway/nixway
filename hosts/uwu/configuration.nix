@@ -36,9 +36,24 @@
   nixpkgs.config.allowUnfree = true;
 
   networking.hostName = "uwu";
-  networking.networkmanager.enable = true;
+  networking.networkmanager = {
+    enable = true;
+    dns = "systemd-resolved";
+    settings = {
+      connection."connection.dns-over-tls" = 2;
+      "global-dns-domain-*".servers = builtins.concatStringsSep "," [
+        "dns+tls://1.1.1.1#cloudflare-dns.com"
+        "dns+tls://1.0.0.1#cloudflare-dns.com"
+      ];
+    };
+  };
   networking.modemmanager.enable = false;
   networking.firewall.enable = true;
+
+  services.resolved = {
+    enable = true;
+    settings.Resolve.DNSOverTLS = "yes";
+  };
 
   time.timeZone = "Europe/Riga";
   i18n.defaultLocale = "en_US.UTF-8";

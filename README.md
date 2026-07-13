@@ -16,7 +16,8 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - The 0x96f palette for Sway desktop components
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
 - PipeWire/WirePlumber with rtkit
-- NetworkManager with automatic wired DHCP, `nmcli`/`nmtui`, and a tray applet
+- NetworkManager with automatic DHCP, Cloudflare DNS over authenticated TLS,
+  `nmcli`/`nmtui`, and a tray applet
 - A lightweight polkit authentication agent for graphical password prompts
 - GNOME Keyring, unlocked by the greetd login, with the GCR SSH agent
 - Screen locking after 10 minutes and display power-off after 15 minutes
