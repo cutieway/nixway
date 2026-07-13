@@ -59,15 +59,16 @@ let
     '';
   };
 
-  # XIVLauncher still requires a wine64 filename, while modern Proton uses a
-  # single WoW64 wine executable. Present an otherwise unchanged Proton tree
-  # with the compatibility name added.
-  protonGeForXivlauncher = pkgs.runCommand "ge-proton-11-1-xivlauncher" { } ''
-    mkdir -p "$out"
-    cp -rsL ${pkgs.proton-ge-bin.steamcompattool}/. "$out/"
-    chmod u+w "$out/files/bin"
-    ln -s wine "$out/files/bin/wine64"
-  '';
+  # XIVLauncher still validates the traditional wine64 filename. Wine's modern
+  # WoW64 build uses one executable for both architectures, so provide the old
+  # name as an alias without changing the Wine runtime itself.
+  wineForXivlauncher = pkgs.symlinkJoin {
+    name = "wine-staging-11.8-xivlauncher";
+    paths = [ pkgs.wineWow64Packages.staging ];
+    postBuild = ''
+      ln -s wine "$out/bin/wine64"
+    '';
+  };
 
 in
 
@@ -84,8 +85,8 @@ in
       config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/ffxivConfig";
     ".xlcore/pluginConfigs".source =
       config.lib.file.mkOutOfStoreSymlink "/home/lexi/Public/xlcore/pluginConfigs";
-    ".xlcore/compatibilitytool/GE-Proton11-1".source =
-      protonGeForXivlauncher;
+    ".xlcore/compatibilitytool/Wine-Staging-11.8".source =
+      wineForXivlauncher;
   };
 
   home.pointerCursor = {

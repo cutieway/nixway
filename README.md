@@ -292,11 +292,12 @@ AppID `312060` (FINAL FANTASY XIV Online Free Trial), so enable Steam Input and
 select the desired gamepad layout for that Steam entry as well as the
 XIVLauncher shortcut.
 
-GE-Proton11-1 is registered with Steam and exposed to XIVLauncher at
-`~/.xlcore/compatibilitytool/GE-Proton11-1`. For a custom XIVLauncher Wine test,
-select `~/.xlcore/compatibilitytool/GE-Proton11-1/files/bin` as the Wine binary
-directory. This changes the compatibility runtime, not the existing
-`~/.xlcore/wineprefix` data directory.
+GE-Proton11-1 is registered with Steam for Steam games, but XIVLauncher uses a
+real standalone Wine build rather than Proton's internal executables. Wine
+staging 11.8 is exposed at `~/.xlcore/compatibilitytool/Wine-Staging-11.8`;
+select its `bin` directory as XIVLauncher's custom Wine binary directory. This
+changes the Wine runtime without moving the existing `~/.xlcore/wineprefix`
+data directory.
 
 Steam includes its normal Proton versions. To run a particular game with GameMode, put this in that game's Steam launch options:
 
