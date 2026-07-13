@@ -279,7 +279,9 @@ Input create virtual controllers; NixOS's Steam hardware module and the broader
 controller interfaces, including the Razer Raiju Tournament Edition
 `1532:1007`. There is no intermediate virtual remapper, so Steam can identify
 the real PlayStation-compatible hardware through hidraw and retain its PS button
-and controller type. Keep the Raiju's physical mode switch in PS4 mode.
+and controller type. Steam explicitly selects SDL's PS4 HIDAPI backend for this
+USB ID so it uses the Raiju-aware raw parser instead of guessing an evdev
+button/axis layout. Keep the Raiju's physical mode switch in PS4 mode.
 
 For the Raiju, enable PlayStation support in Steam and enable Steam Input for the
 game or XIVLauncher shortcut. Native XIVLauncher without Steam does not receive

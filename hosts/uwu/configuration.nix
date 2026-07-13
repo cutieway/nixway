@@ -108,6 +108,13 @@
   programs.steam = {
     enable = true;
     extest.enable = true;
+    package = pkgs.steam.override {
+      extraEnv = {
+        SDL_GAMECONTROLLERTYPE = "0x1532/0x1007=PS4";
+        SDL_JOYSTICK_HIDAPI = "1";
+        SDL_JOYSTICK_HIDAPI_PS4 = "1";
+      };
+    };
   };
 
   environment.systemPackages = with pkgs; [
