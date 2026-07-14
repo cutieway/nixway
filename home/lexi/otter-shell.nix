@@ -16,7 +16,7 @@ let
     otter-hypr = false; # Hyprland companion, not useful in the Sway session.
     otter-idle = false;
     otter-jade = false;
-    otter-launcher = false;
+    otter-launcher = true;
     otter-lock = false;
     otter-logout = false;
     otter-monitor = false;
