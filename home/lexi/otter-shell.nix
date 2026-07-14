@@ -30,7 +30,7 @@ let
     otter-search = false;
     otter-settings = false;
     otter-shot = false;
-    otter-term = false;
+    otter-term = true;
     otter-theme-gen = false;
     otter-timer = false;
     otter-transcribe = false;
