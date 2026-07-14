@@ -139,12 +139,11 @@
     fd
     git
     jq
-    nano
+    micro
     pciutils
     ripgrep
     unzip
     usbutils
-    vim
     wget
   ];
 }

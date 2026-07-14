@@ -166,6 +166,7 @@ in
       gcc
       gh
       htop
+      lite-xl
       openssl.dev
       pkg-config
       rustup
