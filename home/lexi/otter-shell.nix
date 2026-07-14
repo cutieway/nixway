@@ -6,7 +6,7 @@ let
   componentToggles = {
     otter-assist = false; # Also requires programs.otter-shell.assist.model.
     otter-assistant = false;
-    otter-bar = false;
+    otter-bar = true;
     otter-cal = false;
     otter-calc = false;
     otter-clicker = false;
