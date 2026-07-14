@@ -217,6 +217,22 @@
         "type": "github"
       }
     },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1783776592,
+        "narHash": "sha256-UgCQzxeWI75XM8G+hPrPh+MKzEPjG3SpAj7dtqSbksA=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "e7a3ca8092b61ff85b6a45bf863ea2b2d6a661b3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "npm-lockfile-fix": {
       "inputs": {
         "nixpkgs": [
@@ -235,6 +251,24 @@
       "original": {
         "owner": "jeslie0",
         "repo": "npm-lockfile-fix",
+        "type": "github"
+      }
+    },
+    "otter-shell": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
+      },
+      "locked": {
+        "lastModified": 1784006510,
+        "narHash": "sha256-NiXeCwdmiP5itbZQCJKxRKHYMii18V28wrcd6uCK7Bk=",
+        "owner": "cutieway",
+        "repo": "otter-shell-nix",
+        "rev": "8abc95674f4bce012eca317956e8d6bf156c0cd7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cutieway",
+        "repo": "otter-shell-nix",
         "type": "github"
       }
     },
@@ -293,7 +327,8 @@
         "hermes-agent": "hermes-agent",
         "home-manager": "home-manager",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
-        "nixpkgs": "nixpkgs_3"
+        "nixpkgs": "nixpkgs_3",
+        "otter-shell": "otter-shell"
       }
     },
     "uv2nix": {

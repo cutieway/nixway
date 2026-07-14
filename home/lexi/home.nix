@@ -73,6 +73,8 @@ let
 in
 
 {
+  imports = [ ./otter-shell.nix ];
+
   home.username = "lexi";
   home.homeDirectory = "/home/lexi";
   home.stateVersion = "26.05";
@@ -197,6 +199,7 @@ in
     shellAliases = {
       ll = "eza -la --group-directories-first";
       rebuild = "nixway-switch";
+      test-rebuild = "nh os test --accept-flake-config";
       update-hermes = "update_hermes";
       update-kernel = "update_kernel";
       update-system = "update_system";
@@ -287,7 +290,6 @@ in
       };
 
       startup = [
-        { command = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent"; }
         { command = "${pkgs.firefox}/bin/firefox"; }
         { command = "${pkgs.foot}/bin/foot"; }
         { command = "${pkgs.steam}/bin/steam"; }

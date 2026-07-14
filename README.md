@@ -32,6 +32,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
   OpenSSL headers for Rust projects managed with `rustup`
 - Command-line ZIP and 7-Zip archive tools
 - Hermes Agent from its upstream flake, with its complete dependency set pinned by `flake.lock`
+- A pinned Otter Shell test profile with every component disabled until explicitly selected
 - No Bluetooth, cellular-modem, or printing services
 
 Automatic Btrfs snapshots, Cachix, and further module splitting are intentionally deferred. NixOS generations already provide system rollback, the official Nix cache covers this initial configuration, and the current files are still small enough to remain readable.
@@ -468,6 +469,61 @@ NixOS configuration, so future `rebuild` and `update-system` commands need no
 special bootstrap step.
 
 Configuration edits do not change the running machine immediately. They take effect only after a successful `nh os switch`, and every successful rebuild creates another system generation that can be rolled back.
+
+## Testing Otter Shell components
+
+`otter-shell-nix` is a pinned GitHub flake input. Its overlay and NixOS/Home
+Manager modules are wired in, but every application is initially disabled in
+`home/lexi/otter-shell.nix`. The existing desktop remains the fallback.
+
+Perform the initial framework activation with the normal command:
+
+```bash
+rebuild
+```
+
+After that baseline is committed, test one component by changing exactly one
+entry in `componentToggles` from `false` to `true`, then activate it temporarily:
+
+```bash
+test-rebuild
+```
+
+`test-rebuild` runs `nh os test`: it builds and activates the candidate without
+making it the default boot generation or committing it. Enabling a replacement
+automatically suspends its current counterpart:
+
+- `otter-bar` replaces Waybar.
+- `otter-launcher` replaces Wofi as the Sway menu.
+- `otter-term` becomes the Sway terminal command.
+- `otter-lock` takes over `Super+Ctrl+L`.
+- `otter-screenshot` takes over `Print`.
+- `otter-notifications` replaces Mako.
+- `otter-idle` replaces swayidle.
+- `otter-polkit` replaces the LXQt authentication agent.
+
+Turning the entry back to `false` and running `test-rebuild` restores the previous
+component. Newly added and removed user services are applied with `sd-switch`, so
+most daemon tests do not require logging out. The first framework activation
+moves the LXQt Polkit agent from Sway startup into a managed user service; log out
+once after that initial activation if the old unmanaged process is still running.
+
+Inspect an Otter daemon after enabling it with, for example:
+
+```bash
+systemctl --user status otter-bar.service
+journalctl --user -u otter-bar.service -b
+```
+
+When a component works, run `rebuild` to make that tested state the normal boot
+generation and commit it. If a temporary test breaks the graphical session,
+rebooting returns to the last switched generation. The TTY and explicit rollback
+procedure below remain available as a second recovery path.
+
+`otter-assist` is the one intentional exception to the single-toggle rule: its
+service also requires a local GGUF model path. `otter-greeter` is package-only and
+does not replace greetd, while the privileged DRM/KMS recorder helper remains a
+separate opt-in in `modules/otter-shell.nix`.
 
 ## Recovery and first-boot safety
 
