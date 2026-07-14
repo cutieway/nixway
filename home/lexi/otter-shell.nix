@@ -17,7 +17,7 @@ let
     otter-idle = false;
     otter-jade = false;
     otter-launcher = true;
-    otter-lock = false;
+    otter-lock = true;
     otter-logout = false;
     otter-monitor = false;
     otter-note = false;
