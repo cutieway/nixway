@@ -6,7 +6,7 @@ let
   componentToggles = {
     otter-assist = false; # Also requires programs.otter-shell.assist.model.
     otter-assistant = false;
-    otter-bar = true;
+    otter-bar = false;  #removes for keybind bug
     otter-cal = false;
     otter-calc = false;
     otter-clicker = false;
@@ -16,8 +16,8 @@ let
     otter-hypr = false; # Hyprland companion, not useful in the Sway session.
     otter-idle = false;
     otter-jade = false;
-    otter-launcher = true;
-    otter-lock = true;
+    otter-launcher = false; #removes for keybind bug
+    otter-lock = false; #removes for keybind bug
     otter-logout = false;
     otter-monitor = false;
     otter-note = false;
@@ -26,11 +26,11 @@ let
     otter-pick = false;
     otter-polkit = false;
     otter-rec = false;
-    otter-screenshot = true;
+    otter-screenshot = false; #removes for keybind bug
     otter-search = false;
     otter-settings = false;
     otter-shot = false;
-    otter-term = true;
+    otter-term = false; #removes for keybind bug
     otter-theme-gen = false;
     otter-timer = false;
     otter-transcribe = false;
@@ -83,23 +83,25 @@ in
     lib.mkIf componentToggles.otter-notifications (lib.mkForce false);
   services.swayidle.enable = lib.mkIf componentToggles.otter-idle (lib.mkForce false);
 
-  wayland.windowManager.sway.config = lib.mkMerge [
-    (lib.mkIf componentToggles.otter-bar {
-      bars = lib.mkForce [ ];
-    })
-    (lib.mkIf componentToggles.otter-launcher {
-      menu = lib.mkForce (componentCommand "otter-launcher" "otter-launcher");
-    })
-    (lib.mkIf componentToggles.otter-term {
-      terminal = lib.mkForce (componentCommand "otter-term" "otter-term");
-    })
-    (lib.mkIf componentToggles.otter-lock {
-      keybindings."Mod4+Ctrl+l" =
+  wayland.windowManager.sway.config = {
+    bars = lib.mkIf componentToggles.otter-bar (lib.mkForce [ ]);
+    menu = lib.mkIf componentToggles.otter-launcher
+      (lib.mkForce (componentCommand "otter-launcher" "otter-launcher"));
+    terminal = lib.mkIf componentToggles.otter-term
+      (lib.mkForce (componentCommand "otter-term" "otter-term"));
+  };
+
+  # Keybindings use mkOptionDefault to match the priority level of home.nix, so
+  # attrsOf merge combines keys from both files. mkForce inside ensures the
+  # toggled keys override home.nix's values for those specific keys.
+  wayland.windowManager.sway.config.keybindings = lib.mkOptionDefault (
+    (if componentToggles.otter-lock then {
+      "Mod4+Ctrl+l" =
         lib.mkForce "exec ${componentCommand "otter-lock" "otter-lock"}";
-    })
-    (lib.mkIf componentToggles.otter-screenshot {
-      keybindings.Print =
+    } else { })
+    // (if componentToggles.otter-screenshot then {
+      Print =
         lib.mkForce "exec ${componentCommand "otter-screenshot" "otter-screenshot"}";
-    })
-  ];
+    } else { })
+  );
 }
