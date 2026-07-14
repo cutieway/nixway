@@ -26,7 +26,7 @@ let
     otter-pick = false;
     otter-polkit = false;
     otter-rec = false;
-    otter-screenshot = false;
+    otter-screenshot = true;
     otter-search = false;
     otter-settings = false;
     otter-shot = false;
