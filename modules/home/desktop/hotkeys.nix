@@ -51,7 +51,7 @@ in
         (bind "SUPER+Return" "terminal" "Open a terminal")
         (bind "SUPER+D" "launcher" "Open the application launcher")
         (bind "SUPER+E" "file-manager" "Open the file manager")
-        (bind "SUPER+ALT+Q" "close-window" "Close the focused window")
+        (bind "SUPER+SHIFT+Q" "close-window" "Close the focused window")
         (bind "SUPER+F" "toggle-fullscreen" "Toggle fullscreen")
         (bind "SUPER+Space" "toggle-floating" "Toggle floating mode")
         (bind "SUPER+H" "focus-left" "Focus left")

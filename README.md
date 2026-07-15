@@ -633,7 +633,7 @@ toggles capitalization.
 | `Super+Enter` | Open the selected terminal |
 | `Super+D` | Open application launcher |
 | `Super+E` | Open Thunar |
-| `Super+Q` | Close focused window |
+| `Super+SHIFT+Q` | Close focused window |
 | `Super+F` | Toggle fullscreen |
 | `Super+Space` | Toggle floating mode |
 | `Super+H/J/K/L` or `Super+arrows` | Move focus |
