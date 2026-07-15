@@ -17,7 +17,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - Foot, Wofi, Swaylock, Grim, Waybar, Mako, swayidle, LXQt Polkit,
   swaybg, and SwayOSD available as explicit alternative providers
 - A deterministic Gruvbox Dark desktop with neutral near-white primary text
-- Gruvbox Plus icons, a Gruvbox Capitaine cursor, and a generated Gruvbox wallpaper
+- Gruvbox Plus icons, the Bibata Modern Ice cursor, and a generated Gruvbox wallpaper
 - One semantic palette shared by Otter, GTK, Qt/Kvantum, terminals, providers,
   and compositor adapters
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
@@ -126,7 +126,7 @@ The module renders that palette into:
 
 - the complete Otter shared `theme.conf` and the separate Otter Term palette;
 - patched, reproducible Gruvbox GTK 2/3/4 and Qt 5/6 Kvantum themes;
-- Gruvbox Plus icons and the white Gruvbox Capitaine cursor;
+- Gruvbox Plus icons and the Bibata Modern Ice cursor;
 - Sway, Niri, Hyprland, Foot, Swaylock, Waybar, Mako, and Wofi styling;
 - Bat, Vivid/`LS_COLORS`, LibreOffice's GTK backend, and a generated wallpaper.
 

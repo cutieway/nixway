@@ -9,11 +9,6 @@ let
   desktop = config.nixway.desktop;
   palette = desktop.theme.palette;
 
-  cursorTheme = {
-    name = "Capitaine Cursors (Gruvbox) - White";
-    size = 24;
-  };
-
   colorOption =
     default: description:
     lib.mkOption {
@@ -343,18 +338,13 @@ in
 
     home.pointerCursor = {
       enable = true;
-      package = pkgs.capitaine-cursors-themed;
-      inherit (cursorTheme) name size;
+      package = pkgs.bibata-cursors;
+      name = "Bibata-Modern-Ice";
+      size = 24;
       gtk.enable = true;
       sway.enable = desktop.compositor == "sway";
       x11.enable = true;
     };
-
-    # Home Manager 26.05 does not quote cursor names when rendering Sway's
-    # xcursor_theme command. Preserve the official name by rendering it here.
-    wayland.windowManager.sway.config.seat."*".xcursor_theme = lib.mkIf (desktop.compositor == "sway") (
-      lib.mkForce ''"${cursorTheme.name}" ${toString cursorTheme.size}''
-    );
 
     gtk = {
       enable = true;
