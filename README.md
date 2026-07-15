@@ -60,7 +60,7 @@ nixway/
 ├── profiles/
 │   ├── desktop.nix
 │   ├── gaming.nix
-│   ├── school.nix
+│   ├── study.nix
 │   └── work.nix
 └── modules/
     ├── nixos/
