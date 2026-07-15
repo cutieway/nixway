@@ -75,6 +75,7 @@ in
     environment.systemPackages = [ pkgs.firefox ];
 
     fonts.packages = with pkgs; [
+      inter
       nerd-fonts.jetbrains-mono
       noto-fonts
       noto-fonts-color-emoji

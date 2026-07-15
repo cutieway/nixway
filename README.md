@@ -16,8 +16,8 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
   Wallpaper, and OSD selected as the default desktop providers
 - Foot, Wofi, Swaylock, Grim, Waybar, Mako, swayidle, LXQt Polkit,
   swaybg, and SwayOSD available as explicit alternative providers
-- A deterministic Gruvbox Dark desktop with neutral near-white primary text
-- Gruvbox Plus icons, the Bibata Modern Ice cursor, and a generated Gruvbox wallpaper
+- A deterministic JetBrains Original New UI Dark desktop with `#3574F0` accents
+- Colloid Dark icons, the Bibata Modern Ice cursor, Inter UI text, and a generated wallpaper
 - One semantic palette shared by Otter, GTK, Qt/Kvantum, terminals, providers,
   and compositor adapters
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
@@ -117,25 +117,33 @@ separately in `hosts/uwu/default.nix` with `nixway.desktop.compositor = "sway"`.
 ## Desktop theme
 
 `modules/home/desktop/theme.nix` is the single owner of desktop appearance. It
-defines a Gruvbox Dark medium-contrast palette, but replaces Gruvbox's cream
-primary foreground with neutral near-white `#f5f5f5`. Separate semantic roles
-keep secondary text warm and ensure text on bright accent backgrounds remains
-dark and readable.
+pins the neutral layers and color families from JetBrains' Original New UI Dark
+theme. Bright JetBrains Blue6 (`#3574F0`) is the action and focus accent,
+including the focused-window border in Sway. JetBrains Blue2 (`#2E436E`) remains
+a separate selection background so selected rows do not become excessively
+bright. Primary UI text is JetBrains Gray12 (`#DFE1E5`) and the UI font is Inter.
 
 The module renders that palette into:
 
 - the complete Otter shared `theme.conf` and the separate Otter Term palette;
-- patched, reproducible Gruvbox GTK 2/3/4 and Qt 5/6 Kvantum themes;
-- Gruvbox Plus icons and the Bibata Modern Ice cursor;
+- reproducible Nixway GTK 2/3/4 and Qt 5/6 Kvantum ports;
+- Colloid Dark icons and the unchanged Bibata Modern Ice cursor;
 - Sway, Niri, Hyprland, Foot, Swaylock, Waybar, Mako, and Wofi styling;
 - Bat, Vivid/`LS_COLORS`, LibreOffice's GTK backend, and a generated wallpaper.
 
+JetBrains' desktop UI is implemented in Swing rather than GTK or Qt, so these
+toolkit themes are Nixway ports, not upstream JetBrains packages. Colloid and
+KvAdapta-derived assets provide mature widget geometry; their colors are
+replaced at build time and the results are published under the
+`Nixway-New-UI-Dark` name. The resulting palette remains fully owned by this
+repository.
+
 The generated files under `~/.config` are Home Manager links. Do not edit them
 in place: they are replaced on activation by design. Customize the palette in
-Nix instead. For example, exact white can be selected with:
+Nix instead. For example, the global accent can be changed with:
 
 ```nix
-nixway.desktop.theme.palette.foreground = "#ffffff";
+nixway.desktop.theme.palette.accent = "#3574F0";
 ```
 
 Changing a palette value rebuilds every renderer that consumes it. Applications
@@ -429,10 +437,14 @@ workflows and can be added later without reinstalling NixOS.
 
 ## Zed and Rust
 
-Zed and `rustup` are installed for `lexi`. Rust toolchains remain managed by
-`rustup` so the stable compiler can advance independently of the pinned NixOS
-packages. After the first rebuild, install the latest stable toolchain with only
-the minimal profile:
+Zed and `rustup` are installed for `lexi`. The work profile declaratively asks
+Zed to install `jetbrains-themes` and `jetbrains-new-ui-icons`, then selects
+`JetBrains Dark` and `JetBrains New UI Icons (Dark)`. Other Zed settings remain
+mutable and are preserved when Home Manager activates.
+
+Rust toolchains remain managed by `rustup` so the stable compiler can advance
+independently of the pinned NixOS packages. After the first rebuild, install the
+latest stable toolchain with only the minimal profile:
 
 ```bash
 rustup set profile minimal

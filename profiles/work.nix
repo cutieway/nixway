@@ -12,8 +12,26 @@
           pkgs.openssl.dev
           pkgs.pkg-config
           pkgs.rustup
-          pkgs.zed-editor
         ];
+
+        # Match the desktop's Original New UI Dark source theme. Settings stay
+        # mutable so Zed can preserve Lexi's other editor preferences.
+        programs.zed-editor = {
+          enable = true;
+          package = pkgs.zed-editor;
+          extensions = [
+            "jetbrains-themes"
+            "jetbrains-new-ui-icons"
+          ];
+          userSettings = {
+            icon_theme = "JetBrains New UI Icons (Dark)";
+            theme = {
+              mode = "system";
+              light = "One Light";
+              dark = "JetBrains Dark";
+            };
+          };
+        };
 
         home.sessionVariables = {
           OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";

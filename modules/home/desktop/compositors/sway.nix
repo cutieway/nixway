@@ -143,7 +143,7 @@ in
             border = palette.accent;
             background = palette.backgroundAlt;
             text = palette.foreground;
-            indicator = palette.success;
+            indicator = palette.accent;
             childBorder = palette.accent;
           };
           focusedInactive = {
