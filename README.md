@@ -16,8 +16,10 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
   Wallpaper, and OSD selected as the default desktop providers
 - Foot, Wofi, Swaylock, Grim, Waybar, Mako, swayidle, LXQt Polkit,
   swaybg, and SwayOSD available as explicit alternative providers
-- Colloid Dark, Papirus Dark icons, and Bibata Modern Ice cursors
-- The 0x96f palette shared by desktop providers and compositor adapters
+- A deterministic Gruvbox Dark desktop with neutral near-white primary text
+- Gruvbox Plus icons, a Gruvbox Capitaine cursor, and a generated Gruvbox wallpaper
+- One semantic palette shared by Otter, GTK, Qt/Kvantum, terminals, providers,
+  and compositor adapters
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
 - PipeWire/WirePlumber with rtkit
 - NetworkManager with automatic DHCP, Cloudflare DNS over authenticated TLS,
@@ -71,6 +73,7 @@ nixway/
     └── home/
         ├── core/
         └── desktop/
+            ├── theme.nix
             ├── providers.nix
             ├── hotkeys.nix
             └── compositors/
@@ -84,6 +87,7 @@ nixway/
 | Reusable user desktop behavior | `modules/home/` |
 | Opinionated feature combinations | `profiles/` |
 | Lexi's identity and preferences | `home/lexi/home.nix` |
+| Desktop palette and application theme rendering | `modules/home/desktop/theme.nix` |
 | Key combinations | `modules/home/desktop/hotkeys.nix` |
 | Compositor action rendering | `modules/home/desktop/compositors/*.nix` |
 | Application commands and service activation | `modules/home/desktop/providers.nix` |
@@ -109,6 +113,35 @@ This is selection, not fallback behavior. Choosing an Otter provider enables tha
 one component and disables its conventional counterpart. Choosing `null` for an
 optional provider deliberately omits that capability. The compositor is selected
 separately in `hosts/uwu/default.nix` with `nixway.desktop.compositor = "sway"`.
+
+## Desktop theme
+
+`modules/home/desktop/theme.nix` is the single owner of desktop appearance. It
+defines a Gruvbox Dark medium-contrast palette, but replaces Gruvbox's cream
+primary foreground with neutral near-white `#f5f5f5`. Separate semantic roles
+keep secondary text warm and ensure text on bright accent backgrounds remains
+dark and readable.
+
+The module renders that palette into:
+
+- the complete Otter shared `theme.conf` and the separate Otter Term palette;
+- patched, reproducible Gruvbox GTK 2/3/4 and Qt 5/6 Kvantum themes;
+- Gruvbox Plus icons and the white Gruvbox Capitaine cursor;
+- Sway, Niri, Hyprland, Foot, Swaylock, Waybar, Mako, and Wofi styling;
+- Bat, Vivid/`LS_COLORS`, LibreOffice's GTK backend, and a generated wallpaper.
+
+The generated files under `~/.config` are Home Manager links. Do not edit them
+in place: they are replaced on activation by design. Customize the palette in
+Nix instead. For example, exact white can be selected with:
+
+```nix
+nixway.desktop.theme.palette.foreground = "#ffffff";
+```
+
+Changing a palette value rebuilds every renderer that consumes it. Applications
+with fully self-drawn interfaces, such as Steam and Discord, may retain their own
+internal application theme, but their toolkit dialogs, cursor, and surrounding
+desktop chrome still use the Nixway theme.
 
 ## Disk plan
 

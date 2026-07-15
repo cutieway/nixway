@@ -148,8 +148,8 @@ in
           gaps_in = 4;
           gaps_out = 8;
           border_size = 2;
-          "col.active_border" = "rgb(${lib.removePrefix "#" palette.base0D})";
-          "col.inactive_border" = "rgb(${lib.removePrefix "#" palette.base02})";
+          "col.active_border" = "rgb(${lib.removePrefix "#" palette.accent})";
+          "col.inactive_border" = "rgb(${lib.removePrefix "#" palette.surface})";
           layout = "dwindle";
         };
         decoration.rounding = 0;

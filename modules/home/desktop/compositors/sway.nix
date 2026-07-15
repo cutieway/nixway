@@ -72,7 +72,7 @@ let
       { };
 
   renderedOutputs = {
-    "*".bg = "${palette.base00} solid_color";
+    "*".bg = "${palette.background} solid_color";
   }
   // lib.mapAttrs (
     _name: output:
@@ -138,41 +138,41 @@ in
         keybindings = lib.mkForce renderedBindings;
 
         colors = {
-          background = palette.base00;
+          background = palette.background;
           focused = {
-            border = palette.base0D;
-            background = palette.base01;
-            text = palette.base05;
-            indicator = palette.base0B;
-            childBorder = palette.base0D;
+            border = palette.accent;
+            background = palette.backgroundAlt;
+            text = palette.foreground;
+            indicator = palette.success;
+            childBorder = palette.accent;
           };
           focusedInactive = {
-            border = palette.base02;
-            background = palette.base01;
-            text = palette.base06;
-            indicator = palette.base03;
-            childBorder = palette.base02;
+            border = palette.surface;
+            background = palette.backgroundAlt;
+            text = palette.foreground;
+            indicator = palette.border;
+            childBorder = palette.surface;
           };
           unfocused = {
-            border = palette.base01;
-            background = palette.base00;
-            text = palette.base04;
-            indicator = palette.base01;
-            childBorder = palette.base01;
+            border = palette.backgroundAlt;
+            background = palette.background;
+            text = palette.muted;
+            indicator = palette.backgroundAlt;
+            childBorder = palette.backgroundAlt;
           };
           urgent = {
-            border = palette.base08;
-            background = palette.base08;
-            text = palette.base00;
-            indicator = palette.base09;
-            childBorder = palette.base08;
+            border = palette.critical;
+            background = palette.critical;
+            text = palette.onAccent;
+            indicator = palette.orange;
+            childBorder = palette.critical;
           };
           placeholder = {
-            border = palette.base02;
-            background = palette.base00;
-            text = palette.base05;
-            indicator = palette.base03;
-            childBorder = palette.base02;
+            border = palette.surface;
+            background = palette.background;
+            text = palette.foreground;
+            indicator = palette.border;
+            childBorder = palette.surface;
           };
         };
 

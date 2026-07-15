@@ -300,45 +300,11 @@ in
 
     programs.foot = {
       enable = cfg.providers.terminal == "foot";
-      settings = {
-        main.font = "JetBrainsMono Nerd Font:size=11";
-        colors-dark = {
-          background = "262427";
-          foreground = "fcfcfc";
-          regular0 = "262427";
-          regular1 = "ff7272";
-          regular2 = "bcdf59";
-          regular3 = "ffca58";
-          regular4 = "49cae4";
-          regular5 = "a093e2";
-          regular6 = "aee8f4";
-          regular7 = "fcfcfc";
-          bright0 = "676567";
-          bright1 = "ff8787";
-          bright2 = "bcdf59";
-          bright3 = "ffca58";
-          bright4 = "49cae4";
-          bright5 = "a093e2";
-          bright6 = "aee8f4";
-          bright7 = "fcfcfc";
-        };
-      };
     };
 
     programs.swaylock = {
       enable = cfg.providers.lock == "swaylock";
       settings = {
-        color = "262427";
-        inside-color = "3b393ccc";
-        inside-ver-color = "3b393ccc";
-        inside-wrong-color = "ff7272cc";
-        key-hl-color = "bcdf59";
-        line-color = "00000000";
-        ring-color = "514f52";
-        ring-ver-color = "49cae4";
-        ring-wrong-color = "ff7272";
-        separator-color = "00000000";
-        text-color = "fcfcfc";
         indicator-caps-lock = true;
         show-failed-attempts = true;
       };
@@ -366,70 +332,11 @@ in
             { all-outputs = true; };
         clock.format = "{:%Y-%m-%d %H:%M}";
       };
-      style = ''
-        * {
-          border: none;
-          border-radius: 0;
-          font-family: "JetBrainsMono Nerd Font";
-          font-size: 13px;
-          min-height: 0;
-        }
-
-        window#waybar {
-          background: ${palette.base00};
-          color: ${palette.base05};
-        }
-
-        #workspaces button {
-          padding: 0 9px;
-          background: transparent;
-          color: ${palette.base04};
-          border-bottom: 2px solid transparent;
-        }
-
-        #workspaces button.focused,
-        #workspaces button.active {
-          background: ${palette.base01};
-          color: ${palette.base05};
-          border-bottom-color: ${palette.base0D};
-        }
-
-        #workspaces button.urgent {
-          background: ${palette.base08};
-          color: ${palette.base00};
-        }
-
-        #mode,
-        #clock,
-        #pulseaudio,
-        #network,
-        #cpu,
-        #memory,
-        #tray {
-          padding: 0 10px;
-        }
-
-        #mode {
-          background: ${palette.base0A};
-          color: ${palette.base00};
-        }
-
-        #pulseaudio.muted,
-        #network.disconnected {
-          color: ${palette.base08};
-        }
-      '';
     };
 
     services.mako = {
       enable = cfg.providers.notifications == "mako";
       settings = {
-        background-color = palette.base00;
-        text-color = palette.base05;
-        border-color = palette.base0D;
-        progress-color = "over ${palette.base02}";
-        border-radius = 8;
-        border-size = 2;
         default-timeout = 5000;
       };
     };
@@ -486,41 +393,6 @@ in
       Install.WantedBy = [ config.wayland.systemd.target ];
     };
 
-    xdg.configFile."wofi/style.css" = lib.mkIf (cfg.providers.launcher == "wofi") {
-      text = ''
-        window {
-          margin: 0;
-          border: 2px solid ${palette.base0D};
-          border-radius: 8px;
-          background-color: ${palette.base00};
-          color: ${palette.base05};
-          font-family: "JetBrainsMono Nerd Font";
-          font-size: 14px;
-        }
-
-        #input {
-          margin: 10px;
-          padding: 8px;
-          border: 1px solid ${palette.base02};
-          border-radius: 5px;
-          background-color: ${palette.base01};
-          color: ${palette.base05};
-        }
-
-        #entry {
-          padding: 7px 10px;
-          border-radius: 5px;
-        }
-
-        #entry:selected {
-          background-color: ${palette.base02};
-          color: ${palette.base05};
-        }
-
-        #text { margin-left: 8px; }
-      '';
-    };
-
     xdg.configFile."otter-shell/otter-idle.conf" = lib.mkIf (cfg.providers.idle == "otter-idle") {
       force = true;
       text = ''
@@ -569,7 +441,7 @@ in
             same_on_all_displays = true
             overview_enabled = ${lib.boolToString (cfg.compositor == "niri")}
             overview_blur_radius = 9
-            background_color = "${palette.base00}ff"
+            background_color = "${palette.background}ff"
           '';
         };
   };

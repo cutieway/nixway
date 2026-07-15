@@ -148,11 +148,11 @@ let
 
     layout {
         gaps 8
-        background-color "${palette.base00}"
+        background-color "${palette.background}"
         focus-ring {
             width 2
-            active-color "${palette.base0D}"
-            inactive-color "${palette.base02}"
+            active-color "${palette.accent}"
+            inactive-color "${palette.surface}"
         }
         border { off; }
     }

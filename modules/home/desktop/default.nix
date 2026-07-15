@@ -64,6 +64,7 @@ let
 in
 {
   imports = [
+    ./theme.nix
     ./providers.nix
     ./hotkeys.nix
     ./compositors/sway.nix
@@ -81,29 +82,6 @@ in
       default = if osConfig == null then "sway" else osConfig.nixway.desktop.compositor;
       defaultText = lib.literalExpression "osConfig.nixway.desktop.compositor";
       description = "Compositor adapter that renders the shared desktop actions.";
-    };
-
-    theme.palette = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      default = {
-        base00 = "#2c2d32";
-        base01 = "#323339";
-        base02 = "#514f52";
-        base03 = "#676567";
-        base04 = "#7c7b7d";
-        base05 = "#fcfcfc";
-        base06 = "#eae9eb";
-        base07 = "#fcfcfc";
-        base08 = "#ff7272";
-        base09 = "#fc9d6f";
-        base0A = "#ffca58";
-        base0B = "#bcdf59";
-        base0C = "#aee8f4";
-        base0D = "#ca7896";
-        base0E = "#a093e2";
-        base0F = "#ff8787";
-      };
-      description = "Shared desktop palette consumed by providers and adapters.";
     };
 
     outputs = lib.mkOption {
@@ -138,35 +116,10 @@ in
     };
   };
 
-  config = {
-    assertions = [
-      {
-        assertion = builtins.length assignedWorkspaces == builtins.length (lib.unique assignedWorkspaces);
-        message = "Each nixway desktop workspace may be assigned to at most one output.";
-      }
-    ];
-
-    home.pointerCursor = {
-      enable = true;
-      package = pkgs.bibata-cursors;
-      name = "Bibata-Modern-Ice";
-      size = 24;
-      gtk.enable = true;
-      sway.enable = cfg.compositor == "sway";
-      x11.enable = true;
-    };
-
-    gtk = {
-      enable = true;
-      colorScheme = "dark";
-      theme = {
-        name = "Colloid-Dark";
-        package = pkgs.colloid-gtk-theme;
-      };
-      iconTheme = {
-        name = "Papirus-Dark";
-        package = pkgs.papirus-icon-theme;
-      };
-    };
-  };
+  config.assertions = [
+    {
+      assertion = builtins.length assignedWorkspaces == builtins.length (lib.unique assignedWorkspaces);
+      message = "Each nixway desktop workspace may be assigned to at most one output.";
+    }
+  ];
 }
