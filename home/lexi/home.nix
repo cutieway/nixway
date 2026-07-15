@@ -14,6 +14,7 @@
   programs.git.settings.user.name = "lexi";
 
   home.packages = with pkgs; [
+    gimp
     lite-xl
     telegram-desktop
   ];
