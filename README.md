@@ -11,14 +11,18 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - AMD CPU microcode, AMDGPU firmware, 64/32-bit Mesa graphics, and KVM support
 - Latest release-branch CachyOS kernel, optimized for the Ryzen 5 1600's x86-64-v3 instruction set
 - Fixed UID/GID `1000:1000` so preserved data keeps the correct owner
-- Sway, Waybar, Foot, Wofi, Mako, Firefox, Thunar, and XWayland
+- Sway with complete Niri and Hyprland selectors, plus Firefox, Thunar, and XWayland
+- Otter Term, Launcher, Lock, Screenshot, Bar, Notifications, Idle, Polkit,
+  Wallpaper, and OSD selected as the default desktop providers
+- Foot, Wofi, Swaylock, Grim, Waybar, Mako, swayidle, LXQt Polkit,
+  swaybg, and SwayOSD available as explicit alternative providers
 - Colloid Dark, Papirus Dark icons, and Bibata Modern Ice cursors
-- The 0x96f palette for Sway desktop components
+- The 0x96f palette shared by desktop providers and compositor adapters
 - A system dark-color preference exposed to Firefox and websites through the desktop portal
 - PipeWire/WirePlumber with rtkit
 - NetworkManager with automatic DHCP, Cloudflare DNS over authenticated TLS,
   `nmcli`/`nmtui`, and a tray applet
-- A lightweight polkit authentication agent for graphical password prompts
+- Exactly one graphical Polkit authentication agent for password prompts
 - GNOME Keyring, unlocked by the greetd login, with the GCR SSH agent
 - Screen locking after 10 minutes and display power-off after 15 minutes
 - Steam with its normal Proton support and Feral GameMode
@@ -32,10 +36,79 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
   OpenSSL headers for Rust projects managed with `rustup`
 - Command-line ZIP and 7-Zip archive tools
 - Hermes Agent from its upstream flake, with its complete dependency set pinned by `flake.lock`
-- A pinned Otter Shell test profile with every component disabled until explicitly selected
+- A pinned Otter Shell provider family with no compositor configuration of its own
 - No Bluetooth, cellular-modem, or printing services
 
-Automatic Btrfs snapshots, Cachix, and further module splitting are intentionally deferred. NixOS generations already provide system rollback, the official Nix cache covers this initial configuration, and the current files are still small enough to remain readable.
+Automatic Btrfs snapshots and Cachix are intentionally deferred. NixOS generations
+already provide system rollback, and the official Nix cache covers this configuration.
+
+## Configuration architecture
+
+The flake delegates each machine to `lib/mk-host.nix`. A host selects profiles and
+one compositor; the desktop profile selects exactly one provider for every
+capability. Shared hotkeys target semantic actions, so they never need to know
+which application or compositor implements an action.
+
+```text
+nixway/
+├── flake.nix
+├── lib/mk-host.nix
+├── hosts/uwu/
+│   ├── default.nix
+│   └── hardware-configuration.nix
+├── home/lexi/home.nix
+├── profiles/
+│   ├── desktop.nix
+│   ├── gaming.nix
+│   ├── school.nix
+│   └── work.nix
+└── modules/
+    ├── nixos/
+    │   ├── core/
+    │   ├── hardware/
+    │   ├── desktop/compositors/
+    │   └── shell/otter.nix
+    └── home/
+        ├── core/
+        └── desktop/
+            ├── providers.nix
+            ├── hotkeys.nix
+            └── compositors/
+```
+
+| Concern | Owner |
+| --- | --- |
+| Disks, GPU, boot, and device details | `hosts/<host>/hardware-configuration.nix` |
+| Host name, profiles, and compositor | `hosts/<host>/default.nix` |
+| Reusable system behavior | `modules/nixos/` |
+| Reusable user desktop behavior | `modules/home/` |
+| Opinionated feature combinations | `profiles/` |
+| Lexi's identity and preferences | `home/lexi/home.nix` |
+| Key combinations | `modules/home/desktop/hotkeys.nix` |
+| Compositor action rendering | `modules/home/desktop/compositors/*.nix` |
+| Application commands and service activation | `modules/home/desktop/providers.nix` |
+
+The current provider selection is visible in `profiles/desktop.nix`:
+
+```nix
+nixway.desktop.providers = {
+  terminal = "otter-term";
+  launcher = "otter-launcher";
+  lock = "otter-lock";
+  screenshot = "otter-screenshot";
+  bar = "otter-bar";
+  notifications = "otter-notifications";
+  idle = "otter-idle";
+  polkit = "otter-polkit";
+  wallpaper = "otter-wallpaper";
+  osd = "otter-osd";
+};
+```
+
+This is selection, not fallback behavior. Choosing an Otter provider enables that
+one component and disables its conventional counterpart. Choosing `null` for an
+optional provider deliberately omits that capability. The compositor is selected
+separately in `hosts/uwu/default.nix` with `nixway.desktop.compositor = "sway"`.
 
 ## Disk plan
 
@@ -197,7 +270,7 @@ reboot
 
 Select NixOS in the firmware boot menu and log in as `lexi` through tuigreet. Sway starts automatically.
 
-Open Foot with `Super+Enter`, then verify the preserved data mounts:
+Open the selected terminal with `Super+Enter`, then verify the preserved data mounts:
 
 ```bash
 findmnt /mnt/data
@@ -234,7 +307,7 @@ cd /home/lexi/Projects/nixway
 codex
 ```
 
-Starting Codex from the repository gives the agent this configuration as its workspace. If the command is not found in a terminal that was already open, close it and open a new Foot terminal. Rerun the same installer command whenever you want to update Codex.
+Starting Codex from the repository gives the agent this configuration as its workspace. If the command is not found in a terminal that was already open, close it and open a new terminal. Rerun the same installer command whenever you want to update Codex.
 
 The repository's `AGENTS.md` gives each new Codex session the important machine invariants, disk-safety rules, and validation workflow without depending on this conversation history.
 
@@ -273,7 +346,7 @@ mpv /path/to/file
 
 ## Steam and gaming
 
-Start Steam from Wofi or a terminal:
+Start Steam from the selected launcher or a terminal:
 
 ```bash
 steam
@@ -470,60 +543,57 @@ special bootstrap step.
 
 Configuration edits do not change the running machine immediately. They take effect only after a successful `nh os switch`, and every successful rebuild creates another system generation that can be rolled back.
 
-## Testing Otter Shell components
+## Testing desktop providers and compositors
 
-`otter-shell-nix` is a pinned GitHub flake input. Its overlay and NixOS/Home
-Manager modules are wired in, but every application is initially disabled in
-`home/lexi/otter-shell.nix`. The existing desktop remains the fallback.
+`otter-shell-nix` is a pinned flake input. Otter applications are the defaults,
+and `modules/home/desktop/providers.nix` derives their component enables from the
+provider selection. Do not edit `programs.otter-shell.components.*.enable`
+directly for provider-owned components.
 
-Perform the initial framework activation with the normal command:
+To test one conventional implementation, change only its provider in
+`profiles/desktop.nix`. For example:
 
-```bash
-rebuild
+```nix
+nixway.desktop.providers = {
+  terminal = "foot";
+  launcher = "wofi";
+  lock = "swaylock";
+  screenshot = "grim";
+  bar = "waybar";
+  notifications = "mako";
+  idle = "swayidle";
+  polkit = "lxqt";
+  wallpaper = "swaybg";
+  osd = "swayosd";
+};
 ```
 
-After that baseline is committed, test one component by changing exactly one
-entry in `componentToggles` from `false` to `true`, then activate it temporarily:
+Then activate it temporarily:
 
 ```bash
 test-rebuild
 ```
 
 `test-rebuild` runs `nh os test`: it builds and activates the candidate without
-making it the default boot generation or committing it. Enabling a replacement
-automatically suspends its current counterpart:
-
-- `otter-bar` replaces Waybar.
-- `otter-launcher` replaces Wofi as the Sway menu.
-- `otter-term` becomes the Sway terminal command.
-- `otter-lock` takes over `Super+Ctrl+L`.
-- `otter-screenshot` takes over `Print`.
-- `otter-notifications` replaces Mako.
-- `otter-idle` replaces swayidle.
-- `otter-polkit` replaces the LXQt authentication agent.
-
-Turning the entry back to `false` and running `test-rebuild` restores the previous
-component. Newly added and removed user services are applied with `sd-switch`, so
-most daemon tests do not require logging out. The first framework activation
-moves the LXQt Polkit agent from Sway startup into a managed user service; log out
-once after that initial activation if the old unmanaged process is still running.
-
-Inspect an Otter daemon after enabling it with, for example:
+making it the default boot generation or committing it. Home Manager uses
+`sd-switch`, so newly selected daemons start and deselected daemons stop during
+activation. Inspect a provider with, for example:
 
 ```bash
 systemctl --user status otter-bar.service
 journalctl --user -u otter-bar.service -b
 ```
 
-When a component works, run `rebuild` to make that tested state the normal boot
-generation and commit it. If a temporary test breaks the graphical session,
-rebooting returns to the last switched generation. The TTY and explicit rollback
-procedure below remain available as a second recovery path.
+To test another compositor, change the single value in `hosts/uwu/default.nix` to
+`"niri"` or `"hyprland"`, then run `test-rebuild`. Each adapter generates the
+complete binding map; Sway and Hyprland receive forced maps, while Niri receives a
+complete `binds {}` section. Return the value to `"sway"` before a normal rebuild
+unless the new compositor should become the boot default.
 
-`otter-assist` is the one intentional exception to the single-toggle rule: its
-service also requires a local GGUF model path. `otter-greeter` is package-only and
-does not replace greetd, while the privileged DRM/KMS recorder helper remains a
-separate opt-in in `modules/otter-shell.nix`.
+Non-provider Otter applications can be enabled explicitly with
+`nixway.desktop.otter.extraComponents`. `otter-assist` additionally requires
+`nixway.desktop.otter.assistModel`. The privileged recorder helper remains a
+separate opt-in in `modules/nixos/shell/otter.nix`.
 
 ## Recovery and first-boot safety
 
@@ -553,32 +623,41 @@ sudo nixos-rebuild switch --rollback
 
 If a generation does not boot at all, select an older NixOS generation from the systemd-boot menu. This configuration keeps the ten newest boot entries. Keep the NixOS installer USB until the first boot and login have been verified.
 
-## Sway keys
+## Desktop keys
 
 `Super` is the Windows key. Caps Lock is also mapped to Super and no longer
 toggles capitalization.
 
 | Key | Action |
 | --- | --- |
-| `Super+Enter` | Open Foot |
+| `Super+Enter` | Open the selected terminal |
 | `Super+D` | Open application launcher |
 | `Super+E` | Open Thunar |
-| `Super+T` | Toggle split layout |
-| `Super+1` through `Super+5` | Switch to workspace 1 through 5 |
-| `Super+Shift+1` through `Super+Shift+5` | Move the focused window to workspace 1 through 5 |
+| `Super+Q` | Close focused window |
+| `Super+F` | Toggle fullscreen |
+| `Super+Space` | Toggle floating mode |
+| `Super+H/J/K/L` or `Super+arrows` | Move focus |
+| `Super+Shift+H/J/K/L` or `Super+Shift+arrows` | Move focused window |
+| `Super+Alt+H/J/K/L` or `Super+Alt+arrows` | Resize focused window |
+| `Super+1` through `Super+9` | Switch to a named workspace |
+| `Super+Shift+1` through `Super+Shift+9` | Move focused window to a workspace |
+| `Super+Page Up/Down` | Switch to previous or next workspace |
 | `Super+Ctrl+L` | Lock the session |
-| `Super+Shift+Q` | Close focused window |
-| `Super+Shift+E` | Exit Sway |
+| `Print` | Select an area and copy a screenshot |
+| `Shift+Print` | Copy a full-desktop screenshot |
+| Media keys | Volume, playback, microphone mute, and brightness |
+| `Super+Shift+C` | Reload the selected compositor |
+| `Super+Shift+E` | Exit the selected compositor session |
 
 Workspaces 1–4 are fixed to the LG display and workspace 5 is fixed to the
-Philips display. Waybar keeps all five visible even while they are empty. On
-login, Sway starts Firefox on workspace 1, Foot on 2, Steam on 3, and Discord on
+Philips display. On login, the compositor starts Firefox on workspace 1, the
+selected terminal on 2, Steam on 3, and Discord on
 4. XIVLauncher and FFXIV are not started automatically, but open on workspace 3.
-| `Print` | Select an area and copy a screenshot |
 
-Standard Sway focus, move, fullscreen, floating, audio, media, and brightness keys are also configured.
-
-The process named `lxqt-policykit-agent` is only the small graphical polkit prompt used by bare Sway. It does not install or start the LXQt desktop. Removing every polkit agent would make some Thunar, NetworkManager, GameMode, and other graphical administration actions fail without a password dialog.
+Otter Polkit is the selected graphical authentication agent. Selecting `"lxqt"`
+instead starts only the lightweight `lxqt-policykit-agent`, not the LXQt desktop.
+Removing every Polkit agent would leave Thunar, NetworkManager, GameMode, and
+other graphical administration actions without a password dialog.
 
 ## Data partition mapping
 
@@ -604,7 +683,9 @@ The data partition is never formatted by this guide.
 
 ## Hardware and Windows notes
 
-`hosts/uwu/hardware-configuration.nix` already exists and is imported by `hosts/uwu/configuration.nix`. Filesystems are intentionally kept in `modules/filesystems.nix`, so do not run `nixos-generate-config` over the checked-out repo during this install.
+`hosts/uwu/hardware-configuration.nix` is imported by `hosts/uwu/default.nix` and
+owns the filesystem declarations as well as the physical boot, CPU, and GPU
+details. Do not run `nixos-generate-config` over the checked-out repository.
 
 Windows remains untouched and bootable through the motherboard's UEFI boot menu. Because Windows uses `/dev/sda2` while NixOS systemd-boot uses `/dev/sda1`, Windows may not automatically appear inside the systemd-boot menu. Add an explicit cross-ESP Windows entry later only after discovering the correct UEFI device handle; do not guess it during installation.
 

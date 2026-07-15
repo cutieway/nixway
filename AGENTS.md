@@ -12,7 +12,7 @@ This repository is the declarative NixOS configuration for Lexi's personal compu
 ## Disk safety for `uwu`
 
 - Never format, repartition, or overwrite `/dev/sda2`, `/dev/sda3`, `/dev/sda4`, or `/dev/sda5`.
-- `/dev/sda5`, label `data`, is the preserved Btrfs data filesystem. Its bind mounts in `modules/filesystems.nix` are intentional.
+- `/dev/sda5`, label `data`, is the preserved Btrfs data filesystem. Its bind mounts in `hosts/uwu/hardware-configuration.nix` are intentional.
 - Only the human-run installation procedure in `README.md` formats `/dev/sda1` and `/dev/sda6`. Normal configuration work must not run partitioning or formatting commands.
 - Preserve the Windows installation and its separate EFI partition.
 

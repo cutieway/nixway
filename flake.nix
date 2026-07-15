@@ -23,29 +23,15 @@
     ];
   };
 
-  outputs = { self, nixpkgs, home-manager, nix-cachyos-kernel, hermes-agent, otter-shell, ... }:
+  outputs =
+    inputs@{ self, ... }:
     let
-      system = "x86_64-linux";
+      mkHost = import ./lib/mk-host.nix { inherit inputs; };
     in
     {
-      nixosConfigurations.uwu = nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = { inherit nix-cachyos-kernel otter-shell; };
-        modules = [
-          ./hosts/uwu/configuration.nix
-          ./modules/filesystems.nix
-          ./modules/sway.nix
-          ./modules/otter-shell.nix
-
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.sharedModules = [ otter-shell.homeManagerModules.default ];
-            home-manager.extraSpecialArgs = { inherit hermes-agent; };
-            home-manager.users.lexi = import ./home/lexi/home.nix;
-          }
-        ];
+      nixosConfigurations.uwu = mkHost {
+        hostname = "uwu";
+        username = "lexi";
       };
     };
 }
