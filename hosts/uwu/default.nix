@@ -5,6 +5,7 @@
     ./hardware-configuration.nix
     ../../profiles/desktop.nix
     ../../profiles/gaming.nix
+    ../../profiles/study.nix
     ../../profiles/work.nix
   ];
 
