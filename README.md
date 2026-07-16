@@ -2,7 +2,7 @@
 
 Flake-based NixOS configuration for `lexi@uwu`.
 
-This is a clean NixOS install for the existing AMD desktop. It preserves Windows and the existing Btrfs data partition, offers Sway and COSMIC through greetd, and installs a minimal but usable desktop, Steam, media tools, and development essentials. Codex is bootstrapped after the first login with OpenAI's official standalone installer.
+This is a clean NixOS install for the existing AMD desktop. It preserves Windows and the existing Btrfs data partition, offers Sway and COSMIC through COSMIC Greeter, and installs a minimal but usable desktop, Steam, media tools, and development essentials. Codex is bootstrapped after the first login with OpenAI's official standalone installer.
 
 ## What is included
 
@@ -26,7 +26,7 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - NetworkManager with automatic DHCP, Cloudflare DNS over authenticated TLS,
   `nmcli`/`nmtui`, and a tray applet
 - Exactly one graphical Polkit authentication agent for password prompts
-- GNOME Keyring, unlocked by the greetd login, with the GCR SSH agent
+- GNOME Keyring, unlocked by COSMIC Greeter's greetd/PAM login, with the GCR SSH agent
 - Screen locking after 10 minutes and display power-off after 15 minutes
 - Steam with its normal Proton support and Feral GameMode
 - XIVLauncher for Final Fantasy XIV, with credentials stored through GNOME Keyring
@@ -314,9 +314,12 @@ reboot
 
 ## First boot
 
-Select NixOS in the firmware boot menu and log in as `lexi` through tuigreet. Sway starts automatically.
+Select NixOS in the firmware boot menu and log in as `lexi` through COSMIC
+Greeter. Choose COSMIC or Sway from its session selector; the greeter remembers
+the last session used by each account.
 
-Open the selected terminal with `Super+Enter`, then verify the preserved data mounts:
+Open a terminal with `Super+T` in COSMIC or `Super+Enter` in Sway, then verify the
+preserved data mounts:
 
 ```bash
 findmnt /mnt/data
@@ -640,11 +643,18 @@ complete binding map; Sway and Hyprland receive forced maps, while Niri receives
 complete `binds {}` section. Return the value to `"sway"` before a normal rebuild
 unless the new compositor should become the boot default.
 
-COSMIC is installed separately as a complete desktop environment. At tuigreet,
-press `F3` and choose `COSMIC`; choose `Sway` there to return. Tuigreet remembers
-the last successfully used session. COSMIC owns its own shell components, while
-the Nixway/Otter daemons and NetworkManager tray applet remain bound to the
-selected Nixway compositor session.
+COSMIC is installed separately as a complete desktop environment. COSMIC Greeter
+offers both `COSMIC` and `Sway` and remembers the last session used by each
+account. COSMIC owns its own shell components, while the Nixway/Otter daemons and
+NetworkManager tray applet remain bound to the selected Nixway compositor
+session.
+
+COSMIC's `Numbered Workspaces` panel applet provides clickable workspace numbers
+and scroll-wheel navigation. Add it from COSMIC Settings under the panel's applet
+configuration. `Super+1` through `Super+9` select workspaces, while
+`Super+Shift+1` through `Super+Shift+9` move the focused window. With COSMIC's
+default separate-workspaces-per-display mode, each display has its own local
+number sequence; this differs from Nixway's global workspace-to-output mapping.
 
 Non-provider Otter applications can be enabled explicitly with
 `nixway.desktop.otter.extraComponents`. `otter-assist` additionally requires
@@ -653,7 +663,7 @@ separate opt-in in `modules/nixos/shell/otter.nix`.
 
 ## Recovery and first-boot safety
 
-The system remains manageable even if the graphical login or Sway configuration has a problem. Press `Ctrl+Alt+F2` to switch to a text console, log in as `lexi`, and use the same shell tools from there. Return to greetd with `Ctrl+Alt+F1`.
+The system remains manageable even if the graphical login or desktop configuration has a problem. Press `Ctrl+Alt+F2` to switch to a text console, log in as `lexi`, and use the same shell tools from there. Return to COSMIC Greeter on `Ctrl+Alt+F1`.
 
 Check wired networking or configure it interactively:
 
@@ -667,6 +677,7 @@ Inspect a failed graphical login:
 ```bash
 sudo systemctl status greetd --no-pager
 sudo journalctl -b -u greetd --no-pager
+sudo systemctl status cosmic-greeter-daemon --no-pager
 ```
 
 Because Codex is a terminal application, it can also be installed and launched from this text console using the same commands in the Codex section above.

@@ -15,7 +15,6 @@ let
       hyprland = "hyprland-session.target";
     }
     .${cfg.compositor};
-  waylandSessionDirectory = "${config.services.displayManager.sessionData.desktops}/share/wayland-sessions";
 in
 {
   imports = [
@@ -32,12 +31,6 @@ in
         "hyprland"
       ];
       description = "The one compositor enabled for this host.";
-    };
-
-    sessionCommand = lib.mkOption {
-      type = lib.types.str;
-      internal = true;
-      description = "Command started by greetd for the selected compositor.";
     };
   };
 
@@ -74,24 +67,6 @@ in
     xdg.portal = {
       enable = true;
       extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    };
-
-    services.greetd = {
-      enable = true;
-      useTextGreeter = true;
-      settings.default_session = {
-        command = lib.concatStringsSep " " [
-          "${pkgs.tuigreet}/bin/tuigreet"
-          "--time"
-          "--remember"
-          "--remember-session"
-          "--sessions"
-          (lib.escapeShellArg waylandSessionDirectory)
-          "--cmd"
-          (lib.escapeShellArg cfg.sessionCommand)
-        ];
-        user = "greeter";
-      };
     };
 
     environment.systemPackages = [ pkgs.firefox ];

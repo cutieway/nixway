@@ -10,7 +10,5 @@ in
       withUWSM = false;
     };
     programs.xwayland.enable = true;
-
-    nixway.desktop.sessionCommand = "${config.programs.hyprland.package}/bin/start-hyprland";
   };
 }

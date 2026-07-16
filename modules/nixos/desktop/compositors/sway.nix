@@ -13,7 +13,5 @@ in
     };
     programs.xwayland.enable = true;
     xdg.portal.wlr.enable = true;
-
-    nixway.desktop.sessionCommand = lib.getExe config.programs.sway.package;
   };
 }

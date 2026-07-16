@@ -9,7 +9,5 @@ in
       enable = true;
       useNautilus = false;
     };
-
-    nixway.desktop.sessionCommand = "${config.programs.niri.package}/bin/niri-session";
   };
 }
