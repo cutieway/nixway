@@ -15,4 +15,11 @@
   # A host selects exactly one compositor. The desktop profile selects one
   # provider for every capability independently of this choice.
   nixway.desktop.compositor = "sway";
+
+  # COSMIC is a separate full desktop session for comparison, not a Nixway
+  # compositor adapter. Sway remains installed and is tuigreet's fallback.
+  services.desktopManager.cosmic.enable = true;
+
+  # The COSMIC module otherwise enables Bluetooth by default.
+  hardware.bluetooth.enable = false;
 }

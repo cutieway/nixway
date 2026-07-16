@@ -8,6 +8,14 @@
 
 let
   cfg = config.nixway.desktop;
+  nixwaySessionUnit =
+    {
+      sway = "sway-session.target";
+      niri = "niri.service";
+      hyprland = "hyprland-session.target";
+    }
+    .${cfg.compositor};
+  waylandSessionDirectory = "${config.services.displayManager.sessionData.desktops}/share/wayland-sessions";
 in
 {
   imports = [
@@ -53,6 +61,11 @@ in
     };
 
     programs.nm-applet.enable = true;
+    systemd.user.services.nm-applet = {
+      wantedBy = lib.mkForce [ nixwaySessionUnit ];
+      partOf = lib.mkForce [ nixwaySessionUnit ];
+      after = lib.mkForce [ nixwaySessionUnit ];
+    };
     programs.thunar.enable = true;
     services.gvfs.enable = true;
     services.tumbler.enable = true;
@@ -67,7 +80,16 @@ in
       enable = true;
       useTextGreeter = true;
       settings.default_session = {
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --remember --cmd ${lib.escapeShellArg cfg.sessionCommand}";
+        command = lib.concatStringsSep " " [
+          "${pkgs.tuigreet}/bin/tuigreet"
+          "--time"
+          "--remember"
+          "--remember-session"
+          "--sessions"
+          (lib.escapeShellArg waylandSessionDirectory)
+          "--cmd"
+          (lib.escapeShellArg cfg.sessionCommand)
+        ];
         user = "greeter";
       };
     };

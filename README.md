@@ -2,7 +2,7 @@
 
 Flake-based NixOS configuration for `lexi@uwu`.
 
-This is a clean NixOS install for the existing AMD desktop. It preserves Windows and the existing Btrfs data partition, starts Sway through greetd, and installs a minimal but usable desktop, Steam, media tools, and development essentials. Codex is bootstrapped after the first login with OpenAI's official standalone installer.
+This is a clean NixOS install for the existing AMD desktop. It preserves Windows and the existing Btrfs data partition, offers Sway and COSMIC through greetd, and installs a minimal but usable desktop, Steam, media tools, and development essentials. Codex is bootstrapped after the first login with OpenAI's official standalone installer.
 
 ## What is included
 
@@ -11,7 +11,8 @@ This is a clean NixOS install for the existing AMD desktop. It preserves Windows
 - AMD CPU microcode, AMDGPU firmware, 64/32-bit Mesa graphics, and KVM support
 - Latest release-branch CachyOS kernel, optimized for the Ryzen 5 1600's x86-64-v3 instruction set
 - Fixed UID/GID `1000:1000` so preserved data keeps the correct owner
-- Sway with complete Niri and Hyprland selectors, plus Firefox, Thunar, and XWayland
+- Sway with complete Niri and Hyprland selectors, plus a parallel COSMIC session
+- Firefox, Thunar, and XWayland
 - Otter Term, Launcher, Lock, Screenshot, Bar, Notifications, Idle, Polkit,
   Wallpaper, and OSD selected as the default desktop providers
 - Foot, Wofi, Swaylock, Grim, Waybar, Mako, swayidle, LXQt Polkit,
@@ -47,11 +48,12 @@ already provide system rollback, and the official Nix cache covers this configur
 ## Configuration architecture
 
 The flake delegates each machine to `lib/mk-host.nix`. A host selects profiles and
-one compositor; the desktop profile selects exactly one provider for every
-capability. Shared hotkeys target semantic actions, so they never need to know
-which application or compositor implements an action. Otter daemons are tied to
-the selected compositor's user-session unit, so another installed desktop
-session does not start Nixway's Otter bar, notifications, idle, Polkit, OSD, or
+one primary Nixway compositor; the desktop profile selects exactly one provider
+for every capability. Shared hotkeys target semantic actions, so they never need
+to know which application or compositor implements an action. A full desktop
+environment such as COSMIC can also be installed as a separate login session.
+Otter daemons are tied to the selected Nixway compositor's user-session unit, so
+COSMIC does not start Nixway's Otter bar, notifications, idle, Polkit, OSD, or
 wallpaper providers.
 
 ```text
@@ -637,6 +639,12 @@ To test another compositor, change the single value in `hosts/uwu/default.nix` t
 complete binding map; Sway and Hyprland receive forced maps, while Niri receives a
 complete `binds {}` section. Return the value to `"sway"` before a normal rebuild
 unless the new compositor should become the boot default.
+
+COSMIC is installed separately as a complete desktop environment. At tuigreet,
+press `F3` and choose `COSMIC`; choose `Sway` there to return. Tuigreet remembers
+the last successfully used session. COSMIC owns its own shell components, while
+the Nixway/Otter daemons and NetworkManager tray applet remain bound to the
+selected Nixway compositor session.
 
 Non-provider Otter applications can be enabled explicitly with
 `nixway.desktop.otter.extraComponents`. `otter-assist` additionally requires
