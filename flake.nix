@@ -8,8 +8,6 @@
 
     hermes-agent.url = "github:NousResearch/hermes-agent";
 
-    otter-shell.url = "github:cutieway/otter-shell-nix";
-
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";

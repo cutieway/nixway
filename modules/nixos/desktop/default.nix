@@ -1,85 +1,46 @@
-{
-  config,
-  lib,
-  pkgs,
-  username,
-  ...
-}:
+{ pkgs, ... }:
 
-let
-  cfg = config.nixway.desktop;
-  nixwaySessionUnit =
-    {
-      sway = "sway-session.target";
-      niri = "niri.service";
-      hyprland = "hyprland-session.target";
-    }
-    .${cfg.compositor};
-in
 {
-  imports = [
-    ./compositors/sway.nix
-    ./compositors/niri.nix
-    ./compositors/hyprland.nix
-  ];
-
-  options.nixway.desktop = {
-    compositor = lib.mkOption {
-      type = lib.types.enum [
-        "sway"
-        "niri"
-        "hyprland"
-      ];
-      description = "The one compositor enabled for this host.";
+  # Plasma owns the complete graphical session. Its settings remain mutable in
+  # System Settings; Home Manager deliberately does not generate KDE dotfiles.
+  services.desktopManager.plasma6.enable = true;
+  services.displayManager = {
+    defaultSession = "plasma";
+    sddm = {
+      enable = true;
+      wayland.enable = true;
     };
   };
 
-  config = {
-    security.polkit.enable = true;
-    security.rtkit.enable = true;
-    security.pam.services.greetd.enableGnomeKeyring = true;
-    security.pam.services.swaylock.enableGnomeKeyring = true;
+  # Keep one Wayland Plasma session. XWayland remains enabled by the Plasma
+  # module for games and other legacy applications.
+  environment.plasma6.excludePackages = [ pkgs.kdePackages.kwin-x11 ];
 
-    services.dbus = {
-      enable = true;
-      implementation = "broker";
-    };
-    services.gnome.gnome-keyring.enable = true;
-    services.pipewire = {
-      enable = true;
-      alsa.enable = true;
-      alsa.support32Bit = true;
-      pulse.enable = true;
-      wireplumber.enable = true;
-    };
+  security.polkit.enable = true;
+  security.rtkit.enable = true;
 
-    programs.nm-applet.enable = true;
-    systemd.user.services.nm-applet = {
-      wantedBy = lib.mkForce [ nixwaySessionUnit ];
-      partOf = lib.mkForce [ nixwaySessionUnit ];
-      after = lib.mkForce [ nixwaySessionUnit ];
-    };
-    programs.thunar.enable = true;
-    services.gvfs.enable = true;
-    services.tumbler.enable = true;
-    services.udisks2.enable = true;
-
-    xdg.portal = {
-      enable = true;
-      extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
-    };
-
-    environment.systemPackages = [ pkgs.firefox ];
-
-    fonts.packages = with pkgs; [
-      inter
-      nerd-fonts.jetbrains-mono
-      noto-fonts
-      noto-fonts-color-emoji
-    ];
-
-    # Home Manager owns the graphical session configuration and providers for
-    # the primary user; NixOS owns compositor executables and system plumbing.
-    home-manager.users.${username}.nixway.desktop.compositor = lib.mkDefault cfg.compositor;
+  services.dbus = {
+    enable = true;
+    implementation = "broker";
   };
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    wireplumber.enable = true;
+  };
+
+  # SDDM unlocks Plasma's KWallet through the PAM configuration supplied by
+  # the Plasma module. OpenSSH owns the SSH agent independently.
+  programs.ssh.startAgent = true;
+
+  # Preserve Lexi's input preference while leaving all other shortcuts to KDE.
+  services.xserver.xkb = {
+    layout = "us";
+    model = "pc104";
+    options = "caps:super";
+  };
+
+  environment.systemPackages = [ pkgs.firefox ];
 }

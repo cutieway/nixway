@@ -34,7 +34,6 @@ inputs.nixpkgs.lib.nixosSystem {
       home-manager = {
         useGlobalPkgs = true;
         useUserPackages = true;
-        sharedModules = [ inputs.otter-shell.homeManagerModules.default ];
         extraSpecialArgs = {
           inherit
             hostname
