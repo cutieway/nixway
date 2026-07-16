@@ -11,6 +11,7 @@
   home.packages = with pkgs; [
     brave
     gimp
+    librewolf
     lite-xl
     qbittorrent
     telegram-desktop
