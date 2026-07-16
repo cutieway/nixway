@@ -49,7 +49,10 @@ already provide system rollback, and the official Nix cache covers this configur
 The flake delegates each machine to `lib/mk-host.nix`. A host selects profiles and
 one compositor; the desktop profile selects exactly one provider for every
 capability. Shared hotkeys target semantic actions, so they never need to know
-which application or compositor implements an action.
+which application or compositor implements an action. Otter daemons are tied to
+the selected compositor's user-session unit, so another installed desktop
+session does not start Nixway's Otter bar, notifications, idle, Polkit, OSD, or
+wallpaper providers.
 
 ```text
 nixway/

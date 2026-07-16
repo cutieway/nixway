@@ -1,5 +1,6 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
@@ -23,41 +24,8 @@ let
       inherit description;
     };
 
-  otterComponentNames = [
-    "otter-assist"
-    "otter-assistant"
-    "otter-bar"
-    "otter-cal"
-    "otter-calc"
-    "otter-clicker"
-    "otter-clip"
-    "otter-emoji"
-    "otter-greeter"
-    "otter-hypr"
-    "otter-idle"
-    "otter-jade"
-    "otter-launcher"
-    "otter-lock"
-    "otter-logout"
-    "otter-monitor"
-    "otter-note"
-    "otter-notifications"
-    "otter-osd"
-    "otter-pick"
-    "otter-polkit"
-    "otter-rec"
-    "otter-screenshot"
-    "otter-search"
-    "otter-settings"
-    "otter-shot"
-    "otter-term"
-    "otter-theme-gen"
-    "otter-timer"
-    "otter-transcribe"
-    "otter-vox"
-    "otter-wallpaper"
-    "otter-weather"
-  ];
+  otterComponentSpecs = import "${inputs.otter-shell}/nix/package-specs.nix";
+  otterComponentNames = builtins.attrNames otterComponentSpecs;
 
   providerComponentNames = [
     "otter-bar"
@@ -93,6 +61,10 @@ let
   componentSelection = builtins.listToAttrs (
     map (name: lib.nameValuePair name (componentEnabled name)) otterComponentNames
   );
+
+  enabledOtterServiceNames = builtins.filter (
+    name: componentSelection.${name} && otterComponentSpecs.${name}.service
+  ) otterComponentNames;
 
   anyOtterComponentEnabled = lib.any (enabled: enabled) (builtins.attrValues componentSelection);
 
@@ -363,35 +335,52 @@ in
 
     services.swayosd.enable = cfg.providers.osd == "swayosd";
 
-    systemd.user.services.nixway-polkit-agent = lib.mkIf (cfg.providers.polkit == "lxqt") {
-      Unit = {
-        Description = "Nixway Polkit authentication agent";
-        PartOf = [ config.wayland.systemd.target ];
-        After = [ config.wayland.systemd.target ];
-        ConditionEnvironment = "WAYLAND_DISPLAY";
-      };
-      Service = {
-        ExecStart = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent";
-        Restart = "on-failure";
-        RestartSec = 1;
-      };
-      Install.WantedBy = [ config.wayland.systemd.target ];
-    };
+    systemd.user.services = lib.mkMerge [
+      # otter-shell-nix deliberately uses the generic graphical-session target.
+      # Nixway can expose other desktop sessions, so keep every enabled Otter
+      # daemon owned by the compositor selected for this Home Manager profile.
+      (lib.genAttrs enabledOtterServiceNames (_name: {
+        Unit = {
+          PartOf = lib.mkForce [ config.wayland.systemd.target ];
+          After = lib.mkForce [ config.wayland.systemd.target ];
+        };
+        Install.WantedBy = lib.mkForce [ config.wayland.systemd.target ];
+      }))
 
-    systemd.user.services.nixway-wallpaper = lib.mkIf (cfg.providers.wallpaper == "swaybg") {
-      Unit = {
-        Description = "Nixway wallpaper provider";
-        PartOf = [ config.wayland.systemd.target ];
-        After = [ config.wayland.systemd.target ];
-        ConditionEnvironment = "WAYLAND_DISPLAY";
-      };
-      Service = {
-        ExecStart = "${pkgs.swaybg}/bin/swaybg -i ${cfg.wallpaper.path} -m fill";
-        Restart = "on-failure";
-        RestartSec = 1;
-      };
-      Install.WantedBy = [ config.wayland.systemd.target ];
-    };
+      (lib.mkIf (cfg.providers.polkit == "lxqt") {
+        nixway-polkit-agent = {
+          Unit = {
+            Description = "Nixway Polkit authentication agent";
+            PartOf = [ config.wayland.systemd.target ];
+            After = [ config.wayland.systemd.target ];
+            ConditionEnvironment = "WAYLAND_DISPLAY";
+          };
+          Service = {
+            ExecStart = "${pkgs.lxqt.lxqt-policykit}/bin/lxqt-policykit-agent";
+            Restart = "on-failure";
+            RestartSec = 1;
+          };
+          Install.WantedBy = [ config.wayland.systemd.target ];
+        };
+      })
+
+      (lib.mkIf (cfg.providers.wallpaper == "swaybg") {
+        nixway-wallpaper = {
+          Unit = {
+            Description = "Nixway wallpaper provider";
+            PartOf = [ config.wayland.systemd.target ];
+            After = [ config.wayland.systemd.target ];
+            ConditionEnvironment = "WAYLAND_DISPLAY";
+          };
+          Service = {
+            ExecStart = "${pkgs.swaybg}/bin/swaybg -i ${cfg.wallpaper.path} -m fill";
+            Restart = "on-failure";
+            RestartSec = 1;
+          };
+          Install.WantedBy = [ config.wayland.systemd.target ];
+        };
+      })
+    ];
 
     xdg.configFile."otter-shell/otter-idle.conf" = lib.mkIf (cfg.providers.idle == "otter-idle") {
       force = true;

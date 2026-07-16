@@ -179,6 +179,11 @@ in
 
     home.packages = [ pkgs.xwayland-satellite ];
 
+    # Niri owns graphical-session.target directly rather than exposing a
+    # compositor-specific target. Bind Nixway's session services to the
+    # compositor unit so parallel desktop sessions do not start them.
+    wayland.systemd.target = "niri.service";
+
     xdg.configFile."niri/config.kdl" = {
       force = true;
       text = generatedConfig;
