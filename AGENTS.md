@@ -20,8 +20,9 @@ This repository is the declarative NixOS configuration for Lexi's personal compu
 
 - Make persistent system changes in this repository, not with `nix-env` or ad-hoc edits under `/etc`.
 - Use NixOS modules for system services/packages and Home Manager for `lexi`'s user configuration.
-- Keep Home Manager's Sway `package = null`; the NixOS Sway module owns the wrapped executable.
-- Keep one graphical polkit agent, GNOME Keyring/GCR, PipeWire, portals, and the recovery TTY unless intentionally replacing them.
+- Plasma 6 Wayland is the only supported graphical desktop, and SDDM is its display manager. Do not add another desktop, compositor, shell, or greeter unless Lexi explicitly asks for one.
+- Plasma owns mutable panels, displays, shortcuts, appearance, and window-management settings. Do not generate KDE dotfiles through Home Manager unless Lexi explicitly asks to make a setting declarative.
+- Keep one KDE graphical Polkit agent, SDDM/PAM integration for KWallet, PipeWire/WirePlumber, KDE portals with the GTK fallback portal, and the recovery TTY unless intentionally replacing them.
 - NetworkManager is intentional for simple wired networking and troubleshooting. Bluetooth, ModemManager, and printing remain disabled until actually needed.
 - Do not add global development runtimes or background services speculatively. Prefer project dev shells and add personal applications when Lexi asks for or uses them.
 - Codex uses OpenAI's standalone installer because it releases faster than the pinned Nixpkgs package. Do not add Bun, Node.js, npm, or Nixpkgs Codex solely for Codex without rechecking current official guidance.
@@ -32,6 +33,6 @@ This repository is the declarative NixOS configuration for Lexi's personal compu
 - Read `README.md` and the relevant host/module files before changing behavior.
 - Keep `flake.lock` unchanged unless updating inputs is part of the task.
 - Run `git diff --check` and `nix flake check` after Nix changes. For higher-risk changes, also evaluate or dry-run the affected system closure.
-- Apply a reviewed configuration with `nh os switch`. Editing files alone does not change the running system.
+- Apply a reviewed configuration with `nh os switch`. When replacing the active desktop or display manager, prefer `nh os boot` followed by a reboot so the running graphical session is not torn down during activation. Editing files alone does not change the running system.
 - Update `README.md` when installation, recovery, keybindings, storage, or everyday commands change.
 - Preserve unrelated user changes and keep commits focused.

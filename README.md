@@ -90,10 +90,10 @@ Common defaults include:
 | `Super+L` | Lock the session |
 | `Print` | Open Spectacle |
 
-Existing COSMIC and Nixway settings may remain as inert files under
-`~/.config`, but no service or package reads them. Home Manager removes its old
-theme and provider links when the new generation activates. Existing secrets
-from GNOME Keyring are not migrated into KWallet; applications may ask for
+Obsolete COSMIC, Otter Shell, Sway, Niri, and Hyprland settings can be removed
+after confirming Plasma works. Existing secrets from GNOME Keyring are not
+migrated into KWallet, so preserve `~/.local/share/keyrings` until any needed
+credentials have been recreated in KWallet. Applications may ask for those
 credentials once after the change.
 
 ## Disk plan
