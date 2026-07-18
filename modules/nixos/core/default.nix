@@ -88,6 +88,7 @@
 
   environment.systemPackages = with pkgs; [
     bashInteractive
+    bubblewrap
     btrfs-progs
     curl
     fd
