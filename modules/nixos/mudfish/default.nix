@@ -99,10 +99,7 @@ let
     exec = "${mudfishLaunch}/bin/mudfish-launch";
     icon = "${mudfish.unwrapped}/opt/mudfish/${mudfish.version}/share/mudrun_logo.png";
     terminal = false;
-    categories = [
-      "Game"
-      "Network"
-    ];
+    categories = [ "Game" ];
     keywords = [
       "GPN"
       "VPN"
