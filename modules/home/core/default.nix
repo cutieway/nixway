@@ -56,6 +56,8 @@ let
   };
 in
 {
+  imports = [ ./dolphin-7zip.nix ];
+
   programs.home-manager.enable = true;
   home.sessionPath = [ "$HOME/.local/bin" ];
 

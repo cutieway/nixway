@@ -90,6 +90,11 @@ Common defaults include:
 | `Super+L` | Lock the session |
 | `Print` | Open Spectacle |
 
+Dolphin has an **Extract to Folder with 7-Zip** action when right-clicking a
+supported archive. It creates a new folder beside the archive and never merges
+into an existing destination folder. ZIP, 7z, compressed tar archives, and RAR
+archives are supported; RAR support is extraction-only.
+
 Obsolete COSMIC, Otter Shell, Sway, Niri, and Hyprland settings can be removed
 after confirming Plasma works. Existing secrets from GNOME Keyring are not
 migrated into KWallet, so preserve `~/.local/share/keyrings` until any needed
