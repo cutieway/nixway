@@ -8,6 +8,7 @@ let
       pkgs.coreutils
       pkgs.gnugrep
       pkgs.kdePackages.kdialog
+      pkgs.unrar
     ];
     text = ''
       archive_stem() {
@@ -51,6 +52,18 @@ let
         esac
       }
 
+      is_rar() {
+        lower="''${1,,}"
+        case "$lower" in
+          *.rar | *.r[0-9][0-9])
+            return 0
+            ;;
+          *)
+            return 1
+            ;;
+        esac
+      }
+
       extract_archive() {
         archive="$1"
         destination="$2"
@@ -61,7 +74,13 @@ let
           password_args+=("-p$password")
         fi
 
-        if is_compressed_tar "$archive"; then
+        if is_rar "$archive"; then
+          if [ -n "$password" ]; then
+            unrar x -idq -o+ "-p$password" "$archive" "$destination/"
+          else
+            unrar x -idq -o+ -p- "$archive" "$destination/"
+          fi
+        elif is_compressed_tar "$archive"; then
           7zz x -so -bd "''${password_args[@]}" -- "$archive" </dev/null |
             7zz x -si -ttar -y -bd "-o$destination" >/dev/null
         else
@@ -97,9 +116,12 @@ let
         fi
 
         mkdir -- "$destination"
+        extraction_status=0
         if output="$(extract_archive "$archive" "$destination" 2>&1)"; then
           extracted=$((extracted + 1))
           continue
+        else
+          extraction_status=$?
         fi
 
         if grep --ignore-case --quiet password <<<"$output"; then
@@ -107,13 +129,24 @@ let
             if output="$(extract_archive "$archive" "$destination" "$password" 2>&1)"; then
               extracted=$((extracted + 1))
               continue
+            else
+              extraction_status=$?
             fi
           fi
         fi
 
         rmdir -- "$destination" 2>/dev/null || true
-        printf '7-Zip extraction failed for %s:\n%s\n' "$archive" "$output" >&2
-        failures+=("$name: extraction failed")
+        printf 'Archive extraction failed for %s:\n%s\n' "$archive" "$output" >&2
+        diagnostic="$(
+          grep --ignore-case --extended-regexp \
+            'unsupported|error|failed|cannot|corrupt|password|checksum|unexpected end' \
+            <<<"$output" |
+            tail -n 3 || true
+        )"
+        if [ -z "$diagnostic" ]; then
+          diagnostic="extraction failed with status $extraction_status"
+        fi
+        failures+=("$name:\n$diagnostic")
       done
 
       if [ "''${#failures[@]}" -ne 0 ]; then
@@ -143,7 +176,7 @@ in
       X-KDE-Priority=TopLevel
 
       [Desktop Action extractWith7zip]
-      Name=Extract to Folder with 7-Zip
+      Name=Extract Here
       Icon=archive-extract
       Exec=${extractWith7zip}/bin/dolphin-extract-7zip %F
     '';
