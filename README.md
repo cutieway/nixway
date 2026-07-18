@@ -275,6 +275,54 @@ gamemoderun %command%
 Gamescope, MangoHud, Protontricks, Remote Play firewall ports, and server ports
 remain opt-in.
 
+### Mudfish
+
+Mudfish 6.5.3 is packaged as an on-demand, headless NixOS service. Open the
+application launcher, search for **Mudfish**, and click it. After the graphical
+administrator prompt, the launcher starts Mudfish and opens
+`http://127.0.0.1:8282` in the default browser. Clicking the icon again while
+Mudfish is running opens the dashboard without another prompt.
+
+Use normal per-game items in the Mudfish dashboard; Full VPN mode is not part
+of this setup. To stop Mudfish, right-click its application-menu entry and use
+**Stop Mudfish**, or run:
+
+```bash
+sudo systemctl stop mudfish
+```
+
+Inspect its status and logs with:
+
+```bash
+systemctl status mudfish --no-pager
+sudo journalctl -u mudfish --no-pager
+```
+
+Mutable Mudfish state is kept in `/var/lib/mudfish`. On the first start after a
+version change, existing state is copied to `/var/lib/mudfish-backups` before
+the new version runs.
+
+The application version and installer hash are pinned in
+`packages/mudfish/default.nix` because this is a privileged, externally
+supplied networking binary. Stage an explicit version update with:
+
+```bash
+update-mudfish 6.5.4
+```
+
+The command downloads the current and candidate installers without running
+their setup scripts, verifies the current pin, compares their manifests, setup
+scripts, ELF dependencies, and embedded system paths, then updates only the
+version and hash. It runs the flake and full-system build checks and leaves both
+the package diff and a report for review. It does not activate, commit, push, or
+start Mudfish. After reviewing the report and diff, run `rebuild` to install the
+staged version.
+
+`update-system` may rebuild the unchanged Mudfish wrapper when its Nixpkgs
+dependencies change, but it never selects a new upstream Mudfish release. A
+running Mudfish service is not restarted by a rebuild; stopping and opening it
+again uses the version in the active system generation.
+
 ## Development tools
 
 Zed, `rustup`, Bun, GCC, OpenSSL development files, and `pkg-config` are in the
@@ -347,8 +395,9 @@ Update all locked inputs and rebuild:
 update-system
 ```
 
-Use `update-kernel` for only the CachyOS kernel input or `update-hermes` for
-only Hermes. Ordinary rebuilds leave `flake.lock` unchanged.
+Use `update-kernel` for only the CachyOS kernel input, `update-hermes` for only
+Hermes, or `update-mudfish VERSION` to stage and review a Mudfish release.
+Ordinary rebuilds leave `flake.lock` unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through

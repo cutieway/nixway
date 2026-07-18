@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 {
+  imports = [ ../modules/nixos/mudfish ];
+
   programs.gamemode.enable = true;
   hardware.uinput.enable = true;
   hardware.steam-hardware.enable = true;

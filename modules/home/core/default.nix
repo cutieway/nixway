@@ -5,6 +5,27 @@
 }:
 
 let
+  mudfishUpdater = pkgs.writeShellApplication {
+    name = "update-mudfish";
+    runtimeInputs = with pkgs; [
+      binutils
+      bzip2
+      coreutils
+      diffutils
+      findutils
+      git
+      gnugrep
+      gnused
+      gnutar
+      jq
+      nix
+    ];
+    text = ''
+      export NIXWAY_REPO=${repoPath}
+      ${builtins.readFile ../../../scripts/update-mudfish.sh}
+    '';
+  };
+
   nixwaySwitch = pkgs.writeShellApplication {
     name = "nixway-switch";
     runtimeInputs = with pkgs; [
@@ -49,6 +70,7 @@ in
     ffmpeg
     gh
     htop
+    mudfishUpdater
     nixwaySwitch
     opencode
     tree
