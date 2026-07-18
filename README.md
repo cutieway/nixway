@@ -92,9 +92,11 @@ Common defaults include:
 
 Dolphin has an **Extract Here** action when right-clicking a supported
 archive. It creates a new folder beside the archive and never merges into an
-existing destination folder. ZIP, 7z, and compressed tar archives use 7-Zip.
-RAR archives use UnRAR for compatibility with current RAR compression methods;
-RAR support is extraction-only.
+existing destination folder. If the archive already contains one matching
+top-level folder, that folder is reused instead of producing duplicate nesting.
+ZIP, 7z, and compressed tar archives use 7-Zip. RAR archives use UnRAR for
+compatibility with current RAR compression methods; RAR support is
+extraction-only.
 
 Obsolete COSMIC, Otter Shell, Sway, Niri, and Hyprland settings can be removed
 after confirming Plasma works. Existing secrets from GNOME Keyring are not

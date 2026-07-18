@@ -7,6 +7,7 @@ let
       pkgs._7zz
       pkgs.coreutils
       pkgs.gnugrep
+      pkgs.gnused
       pkgs.kdePackages.kdialog
       pkgs.unrar
     ];
@@ -64,6 +65,45 @@ let
         esac
       }
 
+      archive_paths() {
+        archive="$1"
+
+        if is_compressed_tar "$archive"; then
+          7zz x -so -bd -- "$archive" </dev/null |
+            7zz l -si -ttar -slt
+        else
+          7zz l -slt -- "$archive"
+        fi |
+          sed -n '/^----------$/,$ { /^Path = / { s/^Path = //; p; } }'
+      }
+
+      archive_has_matching_root() {
+        archive="$1"
+        expected_root="$2"
+        found_entry=false
+        found_child=false
+
+        while IFS= read -r archived_path; do
+          if [ -z "$archived_path" ]; then
+            continue
+          fi
+
+          found_entry=true
+          case "$archived_path" in
+            "$expected_root")
+              ;;
+            "$expected_root"/*)
+              found_child=true
+              ;;
+            *)
+              return 1
+              ;;
+          esac
+        done < <(archive_paths "$archive")
+
+        [ "$found_entry" = true ] && [ "$found_child" = true ]
+      }
+
       extract_archive() {
         archive="$1"
         destination="$2"
@@ -115,9 +155,16 @@ let
           continue
         fi
 
+        extract_destination="$destination"
+        if archive_has_matching_root "$archive" "$stem"; then
+          # Reserve the matching root directory ourselves, then ask the
+          # extractor to reuse the archived root instead of nesting it.
+          extract_destination="$directory"
+        fi
+
         mkdir -- "$destination"
         extraction_status=0
-        if output="$(extract_archive "$archive" "$destination" 2>&1)"; then
+        if output="$(extract_archive "$archive" "$extract_destination" 2>&1)"; then
           extracted=$((extracted + 1))
           continue
         else
@@ -126,7 +173,7 @@ let
 
         if grep --ignore-case --quiet password <<<"$output"; then
           if password="$(kdialog --password "Password for $name")" && [ -n "$password" ]; then
-            if output="$(extract_archive "$archive" "$destination" "$password" 2>&1)"; then
+            if output="$(extract_archive "$archive" "$extract_destination" "$password" 2>&1)"; then
               extracted=$((extracted + 1))
               continue
             else
