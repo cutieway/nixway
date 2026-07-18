@@ -1,0 +1,4 @@
+interface:
+  display_name: "Nixway Safe Changes"
+  short_description: "Safely change and verify the NixOS configuration"
+  default_prompt: "Use $nixway-safe-changes to make and verify this nixway configuration change."

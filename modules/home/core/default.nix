@@ -50,6 +50,7 @@ in
     gh
     htop
     nixwaySwitch
+    opencode
     tree
   ];
 
