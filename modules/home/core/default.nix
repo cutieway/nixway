@@ -5,6 +5,11 @@
 }:
 
 let
+  sevenZipArkCompat = pkgs.runCommand "7zip-ark-compat" { } ''
+    mkdir -p "$out/bin"
+    ln -s ${pkgs._7zz}/bin/7zz "$out/bin/7z"
+  '';
+
   mudfishUpdater = pkgs.writeShellApplication {
     name = "update-mudfish";
     runtimeInputs = with pkgs; [
@@ -56,8 +61,6 @@ let
   };
 in
 {
-  imports = [ ./dolphin-7zip.nix ];
-
   programs.home-manager.enable = true;
   home.sessionPath = [ "$HOME/.local/bin" ];
 
@@ -75,7 +78,9 @@ in
     mudfishUpdater
     nixwaySwitch
     opencode
+    sevenZipArkCompat
     tree
+    unrar
   ];
 
   programs.git = {
