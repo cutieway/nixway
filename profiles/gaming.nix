@@ -1,23 +1,9 @@
-{ lib, pkgs, ... }:
+{ pkgs, ... }:
 
 {
   imports = [ ../modules/nixos/mudfish ];
 
-  # The NixOS gamemode module only grants gamemoded CAP_SYS_NICE, but switching
-  # the CPU governor (desiredgov=performance) requires CAP_SYS_ADMIN. Regrant it
-  # so GameMode can actually apply the performance governor while gaming.
-  security.wrappers.gamemoded.capabilities = lib.mkForce "cap_setpcap,cap_sys_nice,cap_sys_admin=ep";
-
-  programs.gamemode = {
-    enable = true;
-    settings.general = {
-      desiredgov = "performance";
-      desiredprof = "performance";
-      ioprio = 0;
-      inhibit_screensaver = 1;
-      disable_splitlock = 1;
-    };
-  };
+  programs.gamemode.enable = true;
   # Wine 10.16+ and Proton 11 use /dev/ntsync automatically and retain their
   # own synchronization fallback when a runtime does not support it.
   boot.kernelModules = [ "ntsync" ];
@@ -46,14 +32,8 @@
           paths = [ pkgs.xivlauncher ];
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
-            # Re-wrap the binary through gamemoderun so GameMode is requested
-            # automatically for XIVLauncher and its ffxiv_dx11.exe child, whether
-            # launched directly or via Steam (custom non-Steam game entry).
-            mv "$out/bin/XIVLauncher.Core" "$out/bin/.XIVLauncher.Core-unwrapped"
-            makeWrapper ${pkgs.gamemode}/bin/gamemoderun "$out/bin/XIVLauncher.Core" \
-              --add-flags "$out/bin/.XIVLauncher.Core-unwrapped" \
-              --set SteamVirtualGamepadInfo "" \
-              --prefix PATH : ${pkgs.gamemode}/bin
+            wrapProgram "$out/bin/XIVLauncher.Core" \
+              --set SteamVirtualGamepadInfo ""
           '';
         };
 
