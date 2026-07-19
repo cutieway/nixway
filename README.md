@@ -90,6 +90,12 @@ Common defaults include:
 | `Super+L` | Lock the session |
 | `Print` | Open Spectacle |
 
+The application launcher includes **Turn Off Screens** under **System**. It
+uses Plasma's manual power-management action to put both monitors into standby
+without suspending the computer. Because it is a manual action, it still works
+when a game or media application inhibits the automatic idle timeout; move the
+mouse or press a key to wake the displays again.
+
 Dolphin and Ark use KDE's standard **Extract here** integration. Ark extracts a
 single top-level file or folder directly, and creates an archive-named
 subfolder when an archive has multiple top-level entries. UnRAR provides
