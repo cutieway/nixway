@@ -27,9 +27,16 @@
     (
       { config, pkgs, ... }:
       let
-        xivlauncherWrapped = pkgs.writeShellScriptBin "XIVLauncher.Core" ''
-          exec ${pkgs.gamemode}/bin/gamemoderun ${pkgs.xivlauncher}/bin/XIVLauncher.Core "$@"
-        '';
+        xivlauncherWrapped = pkgs.symlinkJoin {
+          name = "xivlauncher-wrapped";
+          paths = [ pkgs.xivlauncher ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            rm "$out/bin/XIVLauncher.Core"
+            makeWrapper ${pkgs.gamemode}/bin/gamemoderun "$out/bin/XIVLauncher.Core" \
+              --add-flags "${pkgs.xivlauncher}/bin/XIVLauncher.Core"
+          '';
+        };
 
         wineForXivlauncher = pkgs.symlinkJoin {
           name = "wine-staging-11.8-xivlauncher";
