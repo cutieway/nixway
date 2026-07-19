@@ -6,5 +6,8 @@
     ../modules/nixos/desktop
   ];
 
-  home-manager.sharedModules = [ ../modules/home/core ];
+  home-manager.sharedModules = [
+    ../modules/home/core
+    ../modules/home/desktop
+  ];
 }
