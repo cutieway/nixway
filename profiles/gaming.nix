@@ -1,7 +1,12 @@
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 
 {
   imports = [ ../modules/nixos/mudfish ];
+
+  # The NixOS gamemode module only grants gamemoded CAP_SYS_NICE, but switching
+  # the CPU governor (desiredgov=performance) requires CAP_SYS_ADMIN. Regrant it
+  # so GameMode can actually apply the performance governor while gaming.
+  security.wrappers.gamemoded.capabilities = lib.mkForce "cap_setpcap,cap_sys_nice,cap_sys_admin=ep";
 
   programs.gamemode = {
     enable = true;
