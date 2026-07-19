@@ -4,6 +4,9 @@
   imports = [ ../modules/nixos/mudfish ];
 
   programs.gamemode.enable = true;
+  # Wine 10.16+ and Proton 11 use /dev/ntsync automatically and retain their
+  # own synchronization fallback when a runtime does not support it.
+  boot.kernelModules = [ "ntsync" ];
   hardware.uinput.enable = true;
   hardware.steam-hardware.enable = true;
   services.udev.packages = [ pkgs.game-devices-udev-rules ];

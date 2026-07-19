@@ -22,7 +22,7 @@ installation.
   DNS-over-TLS
 - AMD graphics with 64/32-bit Mesa, AMD CPU microcode, KVM, and the pinned
   CachyOS release kernel
-- Steam, Proton GE, GameMode, XIVLauncher, and controller rules
+- Steam, Proton GE, GameMode, XIVLauncher, NTSync, and controller rules
 - Personal desktop, media, study, and development applications installed once
   in Lexi's Home Manager profile
 - Fixed UID/GID `1000:1000` so preserved data keeps the correct owner
@@ -269,6 +269,12 @@ The NixOS Steam module enables 32-bit graphics, controller rules, Proton GE, and
 GameMode. Mesa's RADV Vulkan driver is used; AMDVLK is not installed alongside
 it. XWayland is supplied by Plasma rather than by a second compositor.
 
+The kernel's NTSync module is loaded automatically and provides
+`/dev/ntsync` system-wide. Compatible Wine and Proton versions use it without
+per-game launch options. Each runtime handles its own fallback when NTSync is
+unavailable, so do not force `WINEFSYNC`, `WINEESYNC`, or Proton synchronization
+variables globally.
+
 The Razer Raiju Tournament Edition (`1532:1007`) uses Steam's PS4 HIDAPI path.
 Keep its physical switch in PS4 mode, enable PlayStation support in Steam, and
 enable Steam Input for the relevant game or XIVLauncher shortcut.
@@ -353,7 +359,9 @@ hermes setup
 hermes
 ```
 
-Use `update-hermes` to advance only that input.
+Use `update-hermes` to advance that input explicitly. Hermes is kept separate
+from routine system updates so an upstream agent build failure cannot block OS
+and desktop updates.
 
 ## GitHub access
 
@@ -401,15 +409,15 @@ nix flake check --accept-flake-config
 nh os build --accept-flake-config
 ```
 
-Update all locked inputs and rebuild:
+Update Nixpkgs, Home Manager, and the CachyOS kernel input, then rebuild:
 
 ```bash
 update-system
 ```
 
-Use `update-kernel` for only the CachyOS kernel input, `update-hermes` for only
-Hermes, or `update-mudfish VERSION` to stage and review a Mudfish release.
-Ordinary rebuilds leave `flake.lock` unchanged.
+Use `update-kernel` for only the CachyOS kernel input, `update-hermes` to update
+Hermes separately, or `update-mudfish VERSION` to stage and review a Mudfish
+release. Ordinary rebuilds leave `flake.lock` unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through
