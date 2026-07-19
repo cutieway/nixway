@@ -27,15 +27,9 @@
     (
       { config, pkgs, ... }:
       let
-        xivlauncherWrapped = pkgs.symlinkJoin {
-          name = "xivlauncher-wrapped";
-          paths = [ pkgs.xivlauncher ];
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-          postBuild = ''
-            wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo ""
-          '';
-        };
+        xivlauncherWrapped = pkgs.writeShellScriptBin "XIVLauncher.Core" ''
+          exec ${pkgs.gamemode}/bin/gamemoderun ${pkgs.xivlauncher}/bin/XIVLauncher.Core "$@"
+        '';
 
         wineForXivlauncher = pkgs.symlinkJoin {
           name = "wine-staging-11.8-xivlauncher";
