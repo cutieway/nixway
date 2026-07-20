@@ -33,7 +33,9 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo ""
+              --set SteamVirtualGamepadInfo "" \
+              --set WINEFSYNC "0" \
+              --set WINEESYNC "0"
           '';
         };
 
