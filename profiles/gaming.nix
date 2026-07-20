@@ -3,10 +3,15 @@
 {
   imports = [ ../modules/nixos/mudfish ];
 
-  programs.gamemode.enable = true;
-  environment.variables = {
-    LD_LIBRARY_PATH = "${pkgs.gamemode.lib}/lib";
+  programs.gamemode = {
+    enable = true;
+    enableRenice = true;
   };
+  environment.systemPackages = [
+    (pkgs.writeShellScriptBin "xivlauncher-gamemode" ''
+      exec ${pkgs.gamemode}/bin/gamemoderun XIVLauncher.Core "$@"
+    '')
+  ];
   # Wine 10.16+ and Proton 11 use /dev/ntsync automatically and retain their
   # own synchronization fallback when a runtime does not support it.
   boot.kernelModules = [ "ntsync" ];
@@ -36,9 +41,7 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo "" \
-              --prefix PATH : "${pkgs.gamemode}/bin" \
-              --prefix LD_LIBRARY_PATH : "${pkgs.gamemode}/lib"
+              --set SteamVirtualGamepadInfo ""
           '';
         };
 
