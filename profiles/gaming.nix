@@ -4,7 +4,7 @@
   imports = [ ../modules/nixos/mudfish ];
 
   programs.gamemode.enable = true;
-  environment.sessionVariables = {
+  environment.variables = {
     LD_LIBRARY_PATH = "${pkgs.gamemode.lib}/lib";
   };
   # Wine 10.16+ and Proton 11 use /dev/ntsync automatically and retain their
