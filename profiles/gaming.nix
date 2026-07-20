@@ -1,14 +1,54 @@
 { pkgs, username, ... }:
 
 let
-  xivlauncherGamemode = pkgs.writeShellScriptBin "xivlauncher-gamemode" ''
-    exec env SteamVirtualGamepadInfo="" \
-      ${pkgs.gamemode}/bin/gamemoderun \
-      ${pkgs.xivlauncher}/bin/XIVLauncher.Core "$@"
+  # XIVLauncher with the Steam virtual-controller workaround applied.
+  xivlauncher = pkgs.symlinkJoin {
+    name = "xivlauncher-wrapped";
+    paths = [ pkgs.xivlauncher ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+
+    postBuild = ''
+      wrapProgram "$out/bin/XIVLauncher.Core" \
+        --set SteamVirtualGamepadInfo ""
+    '';
+  };
+
+  # XIVLauncher with GameMode enabled.
+  xivlauncherGamemode = pkgs.writeShellScriptBin "XIVLauncher.Core-gamemode" ''
+    exec ${pkgs.gamemode}/bin/gamemoderun \
+      ${xivlauncher}/bin/XIVLauncher.Core "$@"
   '';
+
+  # XIVLauncher's Wine build with fsync and esync disabled so Wine uses NTsync.
+  xivlauncherWine = pkgs.symlinkJoin {
+    name = "wine-staging-11.8-xivlauncher";
+    paths = [ pkgs.wineWow64Packages.staging ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+
+    postBuild = ''
+      ln -s wine "$out/bin/wine64"
+
+      for bin in "$out"/bin/wine*; do
+        wrapProgram "$bin" \
+          --set WINEFSYNC "0" \
+          --set WINEESYNC "0"
+      done
+    '';
+  };
 in
 {
-  imports = [ ../modules/nixos/mudfish ];
+  imports = [
+    ../modules/nixos/mudfish
+  ];
+
+  # Wine 10.16+ and Proton 11 use /dev/ntsync automatically. Disabling fsync
+  # and esync in the XIVLauncher Wine wrapper forces that path there as well.
+  boot.kernelModules = [ "ntsync" ];
+
+  # Controller and Steam Input support.
+  hardware.uinput.enable = true;
+  hardware.steam-hardware.enable = true;
+  services.udev.packages = [ pkgs.game-devices-udev-rules ];
 
   programs.gamemode = {
     enable = true;
@@ -22,22 +62,8 @@ in
     };
   };
 
-  # Required by GameMode's Polkit rules for privileged governor,
-  # CPU, GPU, and sysctl helpers.
+  # Allows GameMode's privileged CPU, GPU, governor, and sysctl helpers.
   users.users.${username}.extraGroups = [ "gamemode" ];
-
-  environment.systemPackages = [
-    xivlauncherGamemode
-  ];
-
-  # Wine 10.16+ and Proton 11 use /dev/ntsync automatically and retain their
-  # own synchronization fallback when a runtime does not support it.
-  boot.kernelModules = [ "ntsync" ];
-
-  # Steam Input and virtual-controller support.
-  hardware.uinput.enable = true;
-  hardware.steam-hardware.enable = true;
-  services.udev.packages = [ pkgs.game-devices-udev-rules ];
 
   programs.steam = {
     enable = true;
@@ -52,61 +78,36 @@ in
     };
   };
 
+  environment.systemPackages = [
+    xivlauncherGamemode
+  ];
+
   home-manager.sharedModules = [
     (
-      { config, pkgs, ... }:
+      { config, ... }:
 
       let
-        xivlauncherWrapped = pkgs.symlinkJoin {
-          name = "xivlauncher-wrapped";
-          paths = [ pkgs.xivlauncher ];
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-
-          postBuild = ''
-            wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo ""
-          '';
-        };
-
-        wineForXivlauncher = pkgs.symlinkJoin {
-          name = "wine-staging-11.8-xivlauncher";
-          paths = [ pkgs.wineWow64Packages.staging ];
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-
-          postBuild = ''
-            ln -s wine "$out/bin/wine64"
-
-            for bin in "$out"/bin/wine*; do
-              wrapProgram "$bin" \
-                --set WINEFSYNC "0" \
-                --set WINEESYNC "0"
-            done
-          '';
-        };
-
         home = config.home.homeDirectory;
+        xlcoreData = "${home}/Public/xlcore";
       in
       {
         home.packages = [
           pkgs.discord
-          xivlauncherWrapped
+          xivlauncher
         ];
 
         home.file = {
           ".xlcore/ffxiv".source =
-            config.lib.file.mkOutOfStoreSymlink
-              "${home}/Public/xlcore/ffxiv";
+            config.lib.file.mkOutOfStoreSymlink "${xlcoreData}/ffxiv";
 
           ".xlcore/ffxivConfig".source =
-            config.lib.file.mkOutOfStoreSymlink
-              "${home}/Public/xlcore/ffxivConfig";
+            config.lib.file.mkOutOfStoreSymlink "${xlcoreData}/ffxivConfig";
 
           ".xlcore/pluginConfigs".source =
-            config.lib.file.mkOutOfStoreSymlink
-              "${home}/Public/xlcore/pluginConfigs";
+            config.lib.file.mkOutOfStoreSymlink "${xlcoreData}/pluginConfigs";
 
           ".xlcore/compatibilitytool/Wine-Staging-11.8".source =
-            wineForXivlauncher;
+            xivlauncherWine;
         };
       }
     )
