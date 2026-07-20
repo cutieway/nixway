@@ -42,5 +42,8 @@
     options = "caps:super";
   };
 
-  environment.systemPackages = [ pkgs.firefox ];
+  environment.systemPackages = [
+    pkgs.firefox
+    pkgs.kdePackages.sddm-kcm
+  ];
 }
