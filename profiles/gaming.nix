@@ -33,7 +33,8 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo ""
+              --set SteamVirtualGamepadInfo "" \
+              --prefix PATH : "${pkgs.gamemode}/bin"
           '';
         };
 
