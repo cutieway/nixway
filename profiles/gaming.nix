@@ -34,7 +34,8 @@
           postBuild = ''
             wrapProgram "$out/bin/XIVLauncher.Core" \
               --set SteamVirtualGamepadInfo "" \
-              --prefix PATH : "${pkgs.gamemode}/bin"
+              --prefix PATH : "${pkgs.gamemode}/bin" \
+              --prefix LD_LIBRARY_PATH : "${pkgs.gamemode}/lib"
           '';
         };
 
