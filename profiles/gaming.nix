@@ -32,9 +32,7 @@
           paths = [ pkgs.xivlauncher ];
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
-            rm "$out/bin/XIVLauncher.Core"
-            makeWrapper ${pkgs.gamemode}/bin/gamemoderun "$out/bin/XIVLauncher.Core" \
-              --add-flags "${pkgs.xivlauncher}/bin/XIVLauncher.Core" \
+            wrapProgram "$out/bin/XIVLauncher.Core" \
               --set SteamVirtualGamepadInfo ""
           '';
         };
