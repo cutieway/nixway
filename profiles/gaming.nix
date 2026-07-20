@@ -33,17 +33,21 @@
           nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             wrapProgram "$out/bin/XIVLauncher.Core" \
-              --set SteamVirtualGamepadInfo "" \
-              --set WINEFSYNC "0" \
-              --set WINEESYNC "0"
+              --set SteamVirtualGamepadInfo ""
           '';
         };
 
         wineForXivlauncher = pkgs.symlinkJoin {
           name = "wine-staging-11.8-xivlauncher";
           paths = [ pkgs.wineWow64Packages.staging ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
           postBuild = ''
             ln -s wine "$out/bin/wine64"
+            for bin in "$out"/bin/wine*; do
+              wrapProgram "$bin" \
+                --set WINEFSYNC "0" \
+                --set WINEESYNC "0"
+            done
           '';
         };
 
