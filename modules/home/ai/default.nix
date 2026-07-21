@@ -48,18 +48,38 @@ let
     name = "llm";
     runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils ];
     text = ''
-      models_dir="''${LLM_MODELS_DIR:-/home/lexi/.lmstudio/models}"
+      models_dir="''${LLM_MODELS_DIR:-$HOME/.lmstudio/models}"
 
       pick_model() {
         dir="$1"
-        found=$(find "$dir" -maxdepth 1 -name '*.gguf' ! -name 'mmproj-*' -printf '%s %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
-        if [ -z "$found" ]; then
-          found=$(find "$dir" -maxdepth 1 -name '*.gguf' -printf '%s %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
-        fi
-        echo "$found"
+        found=""
+        while IFS= read -r candidate; do
+          filename="$(basename "$candidate")"
+          case "$filename" in
+            *-[0-9][0-9][0-9][0-9][0-9]-of-[0-9][0-9][0-9][0-9][0-9].gguf)
+              shard_part="''${filename##*-}"
+              shard_num="''${shard_part%-of-*}"
+              [ "$shard_num" != "00001" ] && continue
+              ;;
+          esac
+          found="$candidate"
+          break
+        done <<EOF
+$(find "$dir" -maxdepth 1 -type f \
+  -name '*.gguf' \
+  ! -name 'mmproj-*' \
+  -printf '%s %p\n' |
+  sort -rn |
+  cut -d' ' -f2-)
+EOF
+        printf '%s\n' "$found"
       }
 
       list_models() {
+        if [ ! -d "$models_dir" ]; then
+          echo "  (directory $models_dir not found)" >&2
+          return
+        fi
         find "$models_dir" -mindepth 2 -maxdepth 2 -type d | sort | while read -r dir; do
           provider=$(basename "$(dirname "$dir")")
           name=$(basename "$dir")
@@ -78,17 +98,24 @@ let
         echo "  llm Qwen3.5-9B           - searches all providers"
         echo "  llm /path/to/model.gguf  - absolute path"
         echo ""
+        echo "Environment variables:"
+        echo "  LLM_MODELS_DIR    model storage root (default: ~/.lmstudio/models)"
+        echo "  LLM_MODEL_ALIAS   model ID exposed by llama-server (default: local)"
+        echo "  LLM_CTX_SIZE      context window (default: 65536)"
+        echo "  LLM_CACHE_TYPE_K  key cache type (default: q8_0)"
+        echo "  LLM_CACHE_TYPE_V  value cache type (default: q8_0)"
+        echo ""
         echo "Common llama-server flags (pass any after model):"
-        echo "  -ngl N, --n-gpu-layers N    layers to offload to GPU (0 = CPU only)"
-        echo "  --ctx-size N                context window in tokens"
-        echo "  --n-cpu-moe N               CPU threads for MoE experts"
-        echo "  --no-mmap                   load model fully into RAM"
-        echo "  --mlock                     lock model in RAM (prevents swapping)"
-        echo "  --temp N                    temperature (default 0.8)"
-        echo "  --seed N                    random seed (-1 = random)"
-        echo "  -t N, --threads N           CPU threads"
-        echo "  --host ADDR                 bind address (default 127.0.0.1)"
-        echo "  --port N                    port (default 8080)"
+        echo "  -ngl VALUE              GPU layers: auto, all, or an exact number"
+        echo "  --ctx-size N            context window in tokens"
+        echo "  --n-cpu-moe N           keep MoE weights of first N layers in CPU/RAM"
+        echo "  -t N, --threads N       CPU generation threads"
+        echo "  --no-mmap               load model fully into RAM"
+        echo "  --mlock                 lock model in RAM (prevents swapping)"
+        echo "  --temp N                temperature (default 0.8)"
+        echo "  --seed N                random seed (-1 = random)"
+        echo "  --host ADDR             bind address (default 127.0.0.1)"
+        echo "  --port N                port (default 8080)"
         echo ""
         echo "Note: -ngl is shorthand for --n-gpu-layers. llama.cpp uses"
         echo "single-dash abbreviations (-ngl) alongside long flags (--ctx-size)"
@@ -100,11 +127,7 @@ let
         if [ $# -eq 0 ]; then
           echo ""
           echo "Available models:"
-          if [ -d "$models_dir" ]; then
-            list_models
-          else
-            echo "  (directory $models_dir not found)"
-          fi
+          list_models
         fi
         exit 1
       fi
@@ -117,8 +140,16 @@ let
       query="$1"
       shift
 
+      model_path=""
+
       case "$query" in
-        /*) model_path="$(pick_model "$query")" ;;
+        /*)
+          if [ -f "$query" ]; then
+            model_path="$query"
+          elif [ -d "$query" ]; then
+            model_path="$(pick_model "$query")"
+          fi
+          ;;
         */*)
           dir="$models_dir/$query"
           if [ -d "$dir" ]; then
@@ -126,10 +157,23 @@ let
           fi
           ;;
         *)
-          dir=$(find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" | head -1)
-          if [ -n "$dir" ]; then
-            model_path="$(pick_model "$dir")"
-          fi
+          while IFS= read -r dir; do
+            candidate="$(pick_model "$dir")"
+            if [ -n "$candidate" ]; then
+              if [ -z "$model_path" ]; then
+                model_path="$candidate"
+              else
+                echo "Error: multiple providers match '$query':" >&2
+                echo "  $(dirname "$model_path" | xargs dirname)/$(basename "$(dirname "$model_path")")" >&2
+                echo "  $(dirname "$candidate" | xargs dirname)/$(basename "$(dirname "$candidate")")" >&2
+                find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" | sort | while read -r d; do
+                  echo "  $(basename "$(dirname "$d")")/$(basename "$d")" >&2
+                done
+                echo "Use provider/model syntax to disambiguate." >&2
+                exit 1
+              fi
+            fi
+          done < <(find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" 2>/dev/null)
           ;;
       esac
 
@@ -139,7 +183,6 @@ let
         exit 1
       fi
 
-      # use PrismML fork for prism-ml models, standard llama-cpp for everything else
       case "$model_path" in
         */prism-ml/*) server="${llamaCppPrism}/libexec/llama-cpp-prism/llama-server" ;;
         *)            server="${llamaCpp}/bin/llama-server" ;;
@@ -147,10 +190,12 @@ let
 
       exec "$server" \
         --model "$model_path" \
+        --alias "''${LLM_MODEL_ALIAS:-local}" \
+        --ctx-size "''${LLM_CTX_SIZE:-65536}" \
         --parallel 1 \
         --flash-attn auto \
-        --cache-type-k q8_0 \
-        --cache-type-v q8_0 \
+        --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}" \
+        --cache-type-v "''${LLM_CACHE_TYPE_V:-q8_0}" \
         "$@"
     '';
   };
