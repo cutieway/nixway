@@ -82,7 +82,7 @@ let
         --flash-attn auto \
         --cache-type-k q8_0 \
         --cache-type-v q8_0 \
-        -ngl "''${LLAMA_NGL:-0}" \
+        ''${LLAMA_NGL:+-ngl "$LLAMA_NGL"} \
         --host "''${LLAMA_HOST:-127.0.0.1}" \
         --port "''${LLAMA_PORT:-8080}" \
         "$@"
