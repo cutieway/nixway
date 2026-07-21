@@ -57,8 +57,8 @@ let
           filename="$(basename "$candidate")"
           case "$filename" in
             *-[0-9][0-9][0-9][0-9][0-9]-of-[0-9][0-9][0-9][0-9][0-9].gguf)
-              shard_part="''${filename##*-}"
-              shard_num="''${shard_part%-of-*}"
+              shard_prefix="''${filename%-of-*}"
+              shard_num="''${shard_prefix##*-}"
               [ "$shard_num" != "00001" ] && continue
               ;;
           esac
@@ -104,6 +104,7 @@ EOF
         echo "  LLM_CTX_SIZE      context window (default: 65536)"
         echo "  LLM_CACHE_TYPE_K  key cache type (default: q8_0)"
         echo "  LLM_CACHE_TYPE_V  value cache type (default: q8_0)"
+        echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
         echo ""
         echo "Common llama-server flags (pass any after model):"
         echo "  -ngl VALUE              GPU layers: auto, all, or an exact number"
@@ -122,13 +123,16 @@ EOF
         echo "for historical reasons. Both forms work."
       }
 
-      if [ $# -eq 0 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+      if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
         usage
-        if [ $# -eq 0 ]; then
-          echo ""
-          echo "Available models:"
-          list_models
-        fi
+        exit 0
+      fi
+
+      if [ $# -eq 0 ]; then
+        usage
+        echo ""
+        echo "Available models:"
+        list_models
         exit 1
       fi
 
@@ -164,11 +168,11 @@ EOF
                 model_path="$candidate"
               else
                 echo "Error: multiple providers match '$query':" >&2
-                echo "  $(dirname "$model_path" | xargs dirname)/$(basename "$(dirname "$model_path")")" >&2
-                echo "  $(dirname "$candidate" | xargs dirname)/$(basename "$(dirname "$candidate")")" >&2
-                find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" | sort | while read -r d; do
-                  echo "  $(basename "$(dirname "$d")")/$(basename "$d")" >&2
-                done
+                while IFS= read -r d; do
+                  if [ -n "$(pick_model "$d")" ]; then
+                    printf '  %s/%s\n' "$(basename "$(dirname "$d")")" "$(basename "$d")" >&2
+                  fi
+                done < <(find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" 2>/dev/null | sort)
                 echo "Use provider/model syntax to disambiguate." >&2
                 exit 1
               fi
@@ -183,15 +187,35 @@ EOF
         exit 1
       fi
 
-      case "$model_path" in
-        */prism-ml/*) server="${llamaCppPrism}/libexec/llama-cpp-prism/llama-server" ;;
-        *)            server="${llamaCpp}/bin/llama-server" ;;
+      case "''${LLM_BACKEND:-auto}" in
+        prism)
+          server="${llamaCppPrism}/libexec/llama-cpp-prism/llama-server"
+          ;;
+        standard)
+          server="${llamaCpp}/bin/llama-server"
+          ;;
+        auto)
+          case "$model_path" in
+            */prism-ml/*) server="${llamaCppPrism}/libexec/llama-cpp-prism/llama-server" ;;
+            *)            server="${llamaCpp}/bin/llama-server" ;;
+          esac
+          ;;
+        *)
+          echo "Invalid LLM_BACKEND: $LLM_BACKEND" >&2
+          echo "Expected: auto, standard, or prism" >&2
+          exit 2
+          ;;
       esac
+
+      echo "Model:   $model_path" >&2
+      echo "Backend: $server" >&2
+      echo "Context: ''${LLM_CTX_SIZE:-65536}" >&2
 
       exec "$server" \
         --model "$model_path" \
         --alias "''${LLM_MODEL_ALIAS:-local}" \
         --ctx-size "''${LLM_CTX_SIZE:-65536}" \
+        -ngl auto \
         --parallel 1 \
         --flash-attn auto \
         --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}" \
