@@ -69,15 +69,42 @@ let
         done
       }
 
-      if [ $# -eq 0 ]; then
-        echo "Usage: llm <model> [llama-server args...]"
-        echo "       llm list"
+      usage() {
+        echo "Usage: llm <model> [options...]"
+        echo "       llm (list|--help)"
         echo ""
-        echo "Available models:"
-        if [ -d "$models_dir" ]; then
-          list_models
-        else
-          echo "  (directory $models_dir not found)"
+        echo "Model resolution:"
+        echo "  llm HauhauCS/Qwen3.5-9B  - provider/model name"
+        echo "  llm Qwen3.5-9B           - searches all providers"
+        echo "  llm /path/to/model.gguf  - absolute path"
+        echo ""
+        echo "Common llama-server flags (pass any after model):"
+        echo "  -ngl N, --n-gpu-layers N    layers to offload to GPU (0 = CPU only)"
+        echo "  --ctx-size N                context window in tokens"
+        echo "  --n-cpu-moe N               CPU threads for MoE experts"
+        echo "  --no-mmap                   load model fully into RAM"
+        echo "  --mlock                     lock model in RAM (prevents swapping)"
+        echo "  --temp N                    temperature (default 0.8)"
+        echo "  --seed N                    random seed (-1 = random)"
+        echo "  -t N, --threads N           CPU threads"
+        echo "  --host ADDR                 bind address (default 127.0.0.1)"
+        echo "  --port N                    port (default 8080)"
+        echo ""
+        echo "Note: -ngl is shorthand for --n-gpu-layers. llama.cpp uses"
+        echo "single-dash abbreviations (-ngl) alongside long flags (--ctx-size)"
+        echo "for historical reasons. Both forms work."
+      }
+
+      if [ $# -eq 0 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+        usage
+        if [ $# -eq 0 ]; then
+          echo ""
+          echo "Available models:"
+          if [ -d "$models_dir" ]; then
+            list_models
+          else
+            echo "  (directory $models_dir not found)"
+          fi
         fi
         exit 1
       fi
