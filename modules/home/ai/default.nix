@@ -123,17 +123,17 @@ EOF
         echo "for historical reasons. Both forms work."
       }
 
-      if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
-        usage
-        exit 0
-      fi
-
       if [ $# -eq 0 ]; then
         usage
         echo ""
         echo "Available models:"
         list_models
         exit 1
+      fi
+
+      if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+        usage
+        exit 0
       fi
 
       if [ "$1" = "list" ]; then
