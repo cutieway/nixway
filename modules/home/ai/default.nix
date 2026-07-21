@@ -104,7 +104,6 @@ EOF
         echo "  LLM_CTX_SIZE      context window (default: 65536)"
         echo "  LLM_CACHE_TYPE_K  key cache type (default: q8_0)"
         echo "  LLM_CACHE_TYPE_V  value cache type (default: q8_0)"
-        echo "  LLM_CACHE_RAM     prompt cache size in MiB (default: 4096)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
         echo ""
         echo "Common llama-server flags (pass any after model):"
@@ -214,7 +213,6 @@ EOF
         --alias "''${LLM_MODEL_ALIAS:-local}" \
         --ctx-size "''${LLM_CTX_SIZE:-65536}" \
         -ngl auto \
-        --cache-ram "''${LLM_CACHE_RAM:-4096}" \
         --parallel 1 \
         --flash-attn auto \
         --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}" \
