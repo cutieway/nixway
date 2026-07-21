@@ -3,81 +3,47 @@
 let
   llamaCpp = pkgs.llama-cpp-rocm;
 
-  qwenServer = pkgs.writeShellApplication {
-    name = "ai-qwen";
+  llm = pkgs.writeShellApplication {
+    name = "llm";
     runtimeInputs = [ llamaCpp ];
     text = ''
-      context="''${LLAMA_CONTEXT:-16384}"
-      fit_target="''${LLAMA_FIT_TARGET:-2048}"
-      host="''${LLAMA_HOST:-127.0.0.1}"
-      port="''${LLAMA_PORT:-8080}"
+      models_dir="''${LLM_MODELS_DIR:-/home/lexi/.lmstudio/models}"
+
+      if [ $# -eq 0 ]; then
+        echo "Usage: llm <model.gguf> [llama-server args...]"
+        echo ""
+        echo "Available models:"
+        if ls -1 "$models_dir"/*.gguf >/dev/null 2>&1; then
+          ls -1 "$models_dir"/*.gguf
+        else
+          echo "  (no .gguf files in $models_dir)"
+        fi
+        exit 1
+      fi
+
+      model="$1"
+      shift
+
+      case "$model" in
+        /*) model_path="$model" ;;
+        *)  model_path="$models_dir/$model" ;;
+      esac
+
+      if [ ! -f "$model_path" ]; then
+        echo "Model not found: $model_path" >&2
+        exit 1
+      fi
 
       exec llama-server \
-        -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M \
-        --alias qwen3.6-35b-a3b \
-        --no-mmproj \
-        --ctx-size "$context" \
+        --model "$model_path" \
+        --ctx-size "''${LLAMA_CONTEXT:-16384}" \
         --parallel 1 \
         --flash-attn auto \
         --cache-type-k q8_0 \
         --cache-type-v q8_0 \
-        --fit on \
-        --fit-target "$fit_target" \
-        --host "$host" \
-        --port "$port" \
-        "$@"
-    '';
-  };
-
-  qwenMoeServer = pkgs.writeShellApplication {
-    name = "ai-qwen-moe";
-    runtimeInputs = [ llamaCpp ];
-    text = ''
-      context="''${LLAMA_CONTEXT:-16384}"
-      cpu_moe="''${LLAMA_CPU_MOE:-12}"
-      host="''${LLAMA_HOST:-127.0.0.1}"
-      port="''${LLAMA_PORT:-8080}"
-
-      exec llama-server \
-        -hf unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M \
-        --alias qwen3.6-35b-a3b \
-        --no-mmproj \
-        --ctx-size "$context" \
-        --parallel 1 \
-        --flash-attn auto \
-        --cache-type-k q8_0 \
-        --cache-type-v q8_0 \
-        --n-gpu-layers 999 \
-        --n-cpu-moe "$cpu_moe" \
-        --fit off \
-        --host "$host" \
-        --port "$port" \
-        "$@"
-    '';
-  };
-
-  gemmaServer = pkgs.writeShellApplication {
-    name = "ai-gemma";
-    runtimeInputs = [ llamaCpp ];
-    text = ''
-      context="''${LLAMA_CONTEXT:-16384}"
-      fit_target="''${LLAMA_FIT_TARGET:-2048}"
-      host="''${LLAMA_HOST:-127.0.0.1}"
-      port="''${LLAMA_PORT:-8080}"
-
-      exec llama-server \
-        -hf unsloth/gemma-4-26B-A4B-it-qat-GGUF:UD-Q4_K_XL \
-        --alias gemma4-26b-a4b \
-        --no-mmproj \
-        --ctx-size "$context" \
-        --parallel 1 \
-        --flash-attn auto \
-        --cache-type-k q8_0 \
-        --cache-type-v q8_0 \
-        --fit on \
-        --fit-target "$fit_target" \
-        --host "$host" \
-        --port "$port" \
+        -ngl "''${LLAMA_NGL:-0}" \
+        --host "''${LLAMA_HOST:-127.0.0.1}" \
+        --port "''${LLAMA_PORT:-8080}" \
         "$@"
     '';
   };
@@ -86,9 +52,7 @@ in
   home.packages = [
     llamaCpp
     pkgs.amdgpu_top
-    qwenServer
-    qwenMoeServer
-    gemmaServer
+    llm
   ];
 
   programs.bash.shellAliases = {
