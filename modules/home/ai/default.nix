@@ -33,6 +33,11 @@ let
         echo "Usage: llm <model> [llama-server args...]"
         echo "       llm list"
         echo ""
+        echo "Sensible defaults (override via env):"
+        echo "  LLAMA_CONTEXT=16384"
+        echo "  LLAMA_NGL=0"
+        echo "  LLAMA_HOST=127.0.0.1  LLAMA_PORT=8080"
+        echo ""
         echo "Available models:"
         if [ -d "$models_dir" ]; then
           list_models
@@ -77,14 +82,10 @@ let
 
       exec llama-server \
         --model "$model_path" \
-        --ctx-size "''${LLAMA_CONTEXT:-16384}" \
         --parallel 1 \
         --flash-attn auto \
         --cache-type-k q8_0 \
         --cache-type-v q8_0 \
-        ''${LLAMA_NGL:+-ngl "$LLAMA_NGL"} \
-        --host "''${LLAMA_HOST:-127.0.0.1}" \
-        --port "''${LLAMA_PORT:-8080}" \
         "$@"
     '';
   };
