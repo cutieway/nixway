@@ -36,6 +36,7 @@ in
     gimp
     librewolf
     lite-xl
+    lmstudio
     qbittorrent
     telegram-desktop
     turnOffScreens
