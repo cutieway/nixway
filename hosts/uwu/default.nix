@@ -7,6 +7,7 @@
     ../../profiles/gaming.nix
     ../../profiles/study.nix
     ../../profiles/work.nix
+    ../../profiles/ai.nix
   ];
 
   networking.hostName = hostname;
