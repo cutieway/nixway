@@ -5,32 +5,73 @@ let
 
   llm = pkgs.writeShellApplication {
     name = "llm";
-    runtimeInputs = [ llamaCpp ];
+    runtimeInputs = [ llamaCpp pkgs.coreutils pkgs.findutils ];
     text = ''
       models_dir="''${LLM_MODELS_DIR:-/home/lexi/.lmstudio/models}"
 
+      pick_model() {
+        dir="$1"
+        # prefer the largest non-mmproj .gguf
+        found=$(find "$dir" -maxdepth 1 -name '*.gguf' ! -name 'mmproj-*' -printf '%s %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
+        if [ -z "$found" ]; then
+          found=$(find "$dir" -maxdepth 1 -name '*.gguf' -printf '%s %p\n' | sort -rn | head -1 | cut -d' ' -f2-)
+        fi
+        echo "$found"
+      }
+
+      list_models() {
+        find "$models_dir" -mindepth 2 -maxdepth 2 -type d | sort | while read -r dir; do
+          provider=$(basename "$(dirname "$dir")")
+          name=$(basename "$dir")
+          if [ -n "$(pick_model "$dir")" ]; then
+            printf "  %-30s %s\n" "$provider/$name" ""
+          fi
+        done
+      }
+
       if [ $# -eq 0 ]; then
-        echo "Usage: llm <model.gguf> [llama-server args...]"
+        echo "Usage: llm <model> [llama-server args...]"
+        echo "       llm list"
         echo ""
         echo "Available models:"
-        if ls -1 "$models_dir"/*.gguf >/dev/null 2>&1; then
-          ls -1 "$models_dir"/*.gguf
+        if [ -d "$models_dir" ]; then
+          list_models
         else
-          echo "  (no .gguf files in $models_dir)"
+          echo "  (directory $models_dir not found)"
         fi
         exit 1
       fi
 
-      model="$1"
+      if [ "$1" = "list" ]; then
+        list_models
+        exit 0
+      fi
+
+      query="$1"
       shift
 
-      case "$model" in
-        /*) model_path="$model" ;;
-        *)  model_path="$models_dir/$model" ;;
+      # resolve model path
+      case "$query" in
+        /*) model_path="$(pick_model "$query")" ;;
+        */*)
+          # provider/model
+          dir="$models_dir/$query"
+          if [ -d "$dir" ]; then
+            model_path="$(pick_model "$dir")"
+          fi
+          ;;
+        *)
+          # bare name — search all providers
+          dir=$(find "$models_dir" -mindepth 2 -maxdepth 2 -type d -name "$query" | head -1)
+          if [ -n "$dir" ]; then
+            model_path="$(pick_model "$dir")"
+          fi
+          ;;
       esac
 
-      if [ ! -f "$model_path" ]; then
-        echo "Model not found: $model_path" >&2
+      if [ -z "$model_path" ] || [ ! -f "$model_path" ]; then
+        echo "Model not found: $query" >&2
+        echo "Use 'llm list' to see available models." >&2
         exit 1
       fi
 
