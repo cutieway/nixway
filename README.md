@@ -363,6 +363,26 @@ Use `update-hermes` to advance that input explicitly. Hermes is kept separate
 from routine system updates so an upstream agent build failure cannot block OS
 and desktop updates.
 
+### Local llama.cpp models
+
+List or launch GGUF models stored below `~/.lmstudio/models`:
+
+```bash
+llm list
+llm PROVIDER/MODEL
+```
+
+The first launch creates `<model>.gguf.llm.conf` beside the selected GGUF. Each
+interactive launch presents the saved llama-server arguments as an editable
+Readline command. Edit the arguments if needed, then press Enter to save the
+configuration and start the server. Options written after the model name are
+appended to the editable command before it is shown.
+
+Set `LLM_NO_EDIT=1` to launch the saved configuration directly. Non-interactive
+invocations also skip the editor automatically. The server exposes model ID
+`local` at `http://127.0.0.1:8080/v1` unless its saved arguments change those
+defaults.
+
 ## GitHub access
 
 Restore a backed-up SSH directory if needed:

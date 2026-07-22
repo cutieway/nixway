@@ -82,6 +82,40 @@ EOF
         done
       }
 
+      default_config() {
+        local args=(
+          --alias "''${LLM_MODEL_ALIAS:-local}"
+          --ctx-size "''${LLM_CTX_SIZE:-65536}"
+          --batch-size 2048
+          --ubatch-size 512
+          --threads -1
+          -ngl auto
+          --fit-target "''${LLM_FIT_TARGET:-2048}"
+          --n-cpu-moe 0
+          --parallel 1
+          --flash-attn auto
+          --kv-offload
+          --kv-unified
+          --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}"
+          --cache-type-v "''${LLM_CACHE_TYPE_V:-q8_0}"
+          --mmap
+          --jinja
+          --cache-prompt
+          --cache-reuse 0
+          --spec-type none
+          --temp 0.8
+          --top-k 40
+          --top-p 0.95
+          --min-p 0.05
+          --presence-penalty 0.0
+          --repeat-penalty 1.0
+          --host 127.0.0.1
+          --port 8080
+        )
+        printf '%q ' "''${args[@]}"
+        printf '\n'
+      }
+
       usage() {
         echo "Usage: llm <model> [options...]"
         echo "       llm (list|--help)"
@@ -91,14 +125,20 @@ EOF
         echo "  llm Qwen3.5-9B           - searches all providers"
         echo "  llm /path/to/model.gguf  - absolute path"
         echo ""
+        echo "Launch configuration:"
+        echo "  The first launch creates <model>.gguf.llm.conf beside the GGUF."
+        echo "  Interactive launches present its arguments as an editable command."
+        echo "  Press Enter to save and launch; extra CLI options are appended first."
+        echo ""
         echo "Environment variables:"
         echo "  LLM_MODELS_DIR    model storage root (default: ~/.lmstudio/models)"
-        echo "  LLM_MODEL_ALIAS   model ID exposed by llama-server (default: local)"
-        echo "  LLM_CTX_SIZE      context window (default: 65536)"
-        echo "  LLM_CACHE_TYPE_K  key cache type (default: q8_0)"
-        echo "  LLM_CACHE_TYPE_V  value cache type (default: q8_0)"
-        echo "  LLM_FIT_TARGET    auto-fit VRAM reserve in MiB (default: 2048)"
+        echo "  LLM_MODEL_ALIAS   model ID used when creating a config (default: local)"
+        echo "  LLM_CTX_SIZE      context used when creating a config (default: 65536)"
+        echo "  LLM_CACHE_TYPE_K  key cache used when creating a config (default: q8_0)"
+        echo "  LLM_CACHE_TYPE_V  value cache used when creating a config (default: q8_0)"
+        echo "  LLM_FIT_TARGET    VRAM reserve used when creating a config (default: 2048)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
+        echo "  LLM_NO_EDIT       set to 1 to launch the saved config without prompting"
         echo ""
         echo "Common llama-server flags (pass any after model):"
         echo "  -ngl VALUE              GPU layers: auto, all, or an exact number"
@@ -198,22 +238,56 @@ EOF
           ;;
       esac
 
+      config_path="$model_path.llm.conf"
+      if [ ! -e "$config_path" ]; then
+        default_config > "$config_path"
+        echo "Created config: $config_path" >&2
+      elif [ ! -f "$config_path" ]; then
+        echo "Error: model config is not a regular file: $config_path" >&2
+        exit 2
+      fi
+
+      saved_args="$(tr '\n' ' ' < "$config_path")"
+      extra_args=""
+      if [ $# -gt 0 ]; then
+        printf -v extra_args ' %q' "$@"
+      fi
+      launch_args="$saved_args$extra_args"
+
+      interactive=0
+      if [ -t 0 ] && [ -t 1 ] && [ "''${LLM_NO_EDIT:-0}" != 1 ]; then
+        interactive=1
+        printf -v quoted_model '%q' "$model_path"
+        if ! IFS= read -e -r \
+          -p "llama-server --model $quoted_model " \
+          -i "$launch_args" edited_args; then
+          printf '\n' >&2
+          exit 130
+        fi
+        launch_args="$edited_args"
+      fi
+
+      if ! printf '%s\n' "$launch_args" | xargs --no-run-if-empty true; then
+        echo "Error: invalid quoting in launch arguments" >&2
+        exit 2
+      fi
+
+      model_args=()
+      if [ -n "$launch_args" ]; then
+        mapfile -d "" -t model_args < <(
+          printf '%s\n' "$launch_args" |
+            xargs --no-run-if-empty printf '%s\0'
+        )
+      fi
+
+      if [ "$interactive" -eq 1 ]; then
+        printf '%s\n' "$launch_args" > "$config_path"
+        echo "Saved config: $config_path" >&2
+      fi
+
       echo "Model:   $model_path" >&2
       echo "Backend: $server" >&2
-      echo "Context: ''${LLM_CTX_SIZE:-65536}" >&2
-      echo "VRAM reserve: ''${LLM_FIT_TARGET:-2048} MiB" >&2
-
-      exec "$server" \
-        --model "$model_path" \
-        --alias "''${LLM_MODEL_ALIAS:-local}" \
-        --ctx-size "''${LLM_CTX_SIZE:-65536}" \
-        -ngl auto \
-        --fit-target "''${LLM_FIT_TARGET:-2048}" \
-        --parallel 1 \
-        --flash-attn auto \
-        --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}" \
-        --cache-type-v "''${LLM_CACHE_TYPE_V:-q8_0}" \
-        "$@"
+      exec "$server" --model "$model_path" "''${model_args[@]}"
     '';
   };
 
