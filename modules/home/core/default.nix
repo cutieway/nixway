@@ -117,7 +117,7 @@ in
 
       update_system() (
         cd "${repoPath}" || return
-        nix flake update --accept-flake-config nixpkgs home-manager nix-cachyos-kernel &&
+        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
           nixway-switch
       )
     '';

@@ -12,6 +12,13 @@ let
   hostModule = ../hosts + "/${hostname}";
   homeModule = ../home + "/${username}/home.nix";
   repoPath = "/home/${username}/Projects/nixway";
+
+  # Package set from the unstable nixpkgs channel, used for packages that need
+  # a newer version than nixos-26.05 provides (e.g. zed-editor).
+  pkgs-unstable = import inputs.nixpkgs-unstable {
+    inherit system;
+    config.allowUnfree = true;
+  };
 in
 inputs.nixpkgs.lib.nixosSystem {
   inherit system;
@@ -21,6 +28,7 @@ inputs.nixpkgs.lib.nixosSystem {
       gid
       hostname
       inputs
+      pkgs-unstable
       repoPath
       uid
       username
@@ -38,6 +46,7 @@ inputs.nixpkgs.lib.nixosSystem {
           inherit
             hostname
             inputs
+            pkgs-unstable
             repoPath
             username
             ;

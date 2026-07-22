@@ -3,7 +3,7 @@
 {
   home-manager.sharedModules = [
     (
-      { inputs, pkgs, ... }:
+      { inputs, pkgs, pkgs-unstable, ... }:
       {
         home.packages = [
           inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default
@@ -18,7 +18,7 @@
         # mutable so Zed can preserve Lexi's other editor preferences.
         programs.zed-editor = {
           enable = true;
-          package = pkgs.zed-editor;
+          package = pkgs-unstable.zed-editor;
           extensions = [
             "jetbrains-themes"
             "jetbrains-new-ui-icons"
