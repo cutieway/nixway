@@ -39,7 +39,7 @@ let
 
   llm = pkgs.writeShellApplication {
     name = "llm";
-    runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils pkgs.gum ];
+    runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils ];
     text = ''
       models_dir="''${LLM_MODELS_DIR:-$HOME/.lmstudio/models}"
 
@@ -82,38 +82,67 @@ EOF
         done
       }
 
+      flatten_config() {
+        local line
+        while IFS= read -r line || [ -n "$line" ]; do
+          if [[ "$line" =~ ^[[:space:]]*# ]] || [[ "$line" =~ ^[[:space:]]*$ ]]; then
+            continue
+          fi
+          while [[ "$line" == *[[:space:]] ]]; do
+            line="''${line%?}"
+          done
+          if [[ "$line" == *\\ ]]; then
+            line="''${line%\\}"
+          fi
+          printf '%s ' "$line"
+        done
+      }
+
       default_config() {
-        local args=(
-          --alias "''${LLM_MODEL_ALIAS:-local}"
-          --ctx-size "''${LLM_CTX_SIZE:-65536}"
-          --batch-size 2048
-          --ubatch-size 512
-          --threads -1
-          -ngl auto
-          --fit-target "''${LLM_FIT_TARGET:-2048}"
-          --n-cpu-moe 0
-          --parallel 1
-          --flash-attn auto
-          --kv-offload
-          --kv-unified
-          --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}"
-          --cache-type-v "''${LLM_CACHE_TYPE_V:-q8_0}"
-          --mmap
-          --jinja
-          --cache-prompt
-          --cache-reuse 0
-          --spec-type none
-          --temp 0.8
-          --top-k 40
-          --top-p 0.95
-          --min-p 0.05
-          --presence-penalty 0.0
-          --repeat-penalty 1.0
-          --host 127.0.0.1
-          --port 8080
-        )
-        printf '%q ' "''${args[@]}"
-        printf '\n'
+        local model_q
+        printf -v model_q '%q' "$model_path"
+        cat <<EOF
+llama-server \\
+  # -----------------------------------------------------------------
+  # 1. MODEL & IDENTITY
+  # -----------------------------------------------------------------
+  -m $model_q \\
+  --alias ''${LLM_MODEL_ALIAS:-local} \\
+  --jinja \\
+  # -----------------------------------------------------------------
+  # 2. HARDWARE ACCELERATION & GPU OFFLOAD
+  # -----------------------------------------------------------------
+  -ngl auto \\
+  --flash-attn auto \\
+  --threads -1 \\
+  --mmap \\
+  --fit-target ''${LLM_FIT_TARGET:-2048} \\
+  --n-cpu-moe 0 \\
+  # -----------------------------------------------------------------
+  # 3. CONTEXT, BATCHING & KV CACHE
+  # -----------------------------------------------------------------
+  --ctx-size ''${LLM_CTX_SIZE:-65536} \\
+  --batch-size 2048 \\
+  --ubatch-size 1024 \\
+  --cache-type-k ''${LLM_CACHE_TYPE_K:-q8_0} \\
+  --cache-type-v ''${LLM_CACHE_TYPE_V:-q8_0} \\
+  --cache-reuse 256 \\
+  # -----------------------------------------------------------------
+  # 4. SERVER, NETWORKING & CONCURRENCY
+  # -----------------------------------------------------------------
+  --host 127.0.0.1 \\
+  --port 8080 \\
+  --parallel 1 \\
+  # -----------------------------------------------------------------
+  # 5. SAMPLING & GENERATION DEFAULTS
+  # -----------------------------------------------------------------
+  --temp 0.7 \\
+  --top-k 20 \\
+  --top-p 0.95 \\
+  --min-p 0.00 \\
+  --presence-penalty 0.0 \\
+  --repeat-penalty 1.0
+EOF
       }
 
       usage() {
@@ -127,8 +156,8 @@ EOF
         echo ""
         echo "Launch configuration:"
         echo "  The first launch creates <model>.gguf.llm.conf beside the GGUF."
-        echo "  Interactive launches present its arguments as an editable command."
-        echo "  Press Enter to save and launch; extra CLI options are appended first."
+        echo "  Each launch prints the complete grouped config and waits for Enter."
+        echo "  Edit the sidecar with any text editor; command-line options are temporary."
         echo ""
         echo "Environment variables:"
         echo "  LLM_MODELS_DIR    model storage root (default: ~/.lmstudio/models)"
@@ -138,7 +167,7 @@ EOF
         echo "  LLM_CACHE_TYPE_V  value cache used when creating a config (default: q8_0)"
         echo "  LLM_FIT_TARGET    VRAM reserve used when creating a config (default: 2048)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
-        echo "  LLM_NO_EDIT       set to 1 to launch the saved config without prompting"
+        echo "  LLM_NO_CONFIRM    set to 1 to launch without printing or prompting"
         echo ""
         echo "Common llama-server flags (pass any after model):"
         echo "  -ngl VALUE              GPU layers: auto, all, or an exact number"
@@ -147,7 +176,7 @@ EOF
         echo "  -t N, --threads N       CPU generation threads"
         echo "  --no-mmap               load model fully into RAM"
         echo "  --mlock                 lock model in RAM (prevents swapping)"
-        echo "  --temp N                temperature (default 0.8)"
+        echo "  --temp N                temperature (default 0.7)"
         echo "  --seed N                random seed (-1 = random)"
         echo "  --host ADDR             bind address (default 127.0.0.1)"
         echo "  --port N                port (default 8080)"
@@ -247,63 +276,57 @@ EOF
         exit 2
       fi
 
-      saved_args="$(tr '\n' ' ' < "$config_path")"
-      if [ -z "''${saved_args//[[:space:]]/}" ]; then
+      config_text="$(< "$config_path")"
+      if [ -z "''${config_text//[[:space:]]/}" ]; then
         default_config > "$config_path"
-        saved_args="$(tr '\n' ' ' < "$config_path")"
+        config_text="$(< "$config_path")"
         echo "Initialized empty config: $config_path" >&2
       fi
 
-      extra_args=""
-      if [ $# -gt 0 ]; then
-        printf -v extra_args ' %q' "$@"
-      fi
-      launch_args="$saved_args$extra_args"
-
-      interactive=0
-      if [ -t 0 ] && [ -t 1 ] && [ "''${LLM_NO_EDIT:-0}" != 1 ]; then
-        interactive=1
-        printf -v quoted_model '%q' "$model_path"
-        if ! edited_args="$(
-          gum input \
-            --header="llama-server --model $quoted_model" \
-            --prompt="arguments> " \
-            --value="$launch_args" \
-            --char-limit 0 \
-            --width 0 \
-            --show-help
-        )"; then
-          printf '\n' >&2
-          exit 130
-        fi
-        if [ -z "''${edited_args//[[:space:]]/}" ]; then
-          echo "Empty edit ignored; keeping the saved launch arguments." >&2
-          edited_args="$launch_args"
-        fi
-        launch_args="$edited_args"
-      fi
+      launch_args="$(flatten_config <<< "$config_text")"
 
       if ! printf '%s\n' "$launch_args" | xargs --no-run-if-empty true; then
         echo "Error: invalid quoting in launch arguments" >&2
         exit 2
       fi
 
-      model_args=()
+      config_args=()
       if [ -n "$launch_args" ]; then
-        mapfile -d "" -t model_args < <(
+        mapfile -d "" -t config_args < <(
           printf '%s\n' "$launch_args" |
             xargs --no-run-if-empty printf '%s\0'
         )
       fi
 
-      if [ "$interactive" -eq 1 ]; then
-        printf '%s\n' "$launch_args" > "$config_path"
-        echo "Saved config: $config_path" >&2
+      display_config="$config_text"
+      if [ "''${#config_args[@]}" -gt 0 ] && [ "''${config_args[0]}" = llama-server ]; then
+        server_args=("''${config_args[@]:1}")
+      else
+        printf -v model_q '%q' "$model_path"
+        display_config="llama-server \\"$'\n'"  -m $model_q \\"$'\n'"$config_text"
+        server_args=(-m "$model_path" "''${config_args[@]}")
+        echo "Note: showing the existing arguments-only config as a complete command." >&2
+        echo "Delete it once to generate the new grouped format." >&2
+      fi
+      server_args+=("$@")
+
+      no_confirm="''${LLM_NO_CONFIRM:-''${LLM_NO_EDIT:-0}}"
+      if [ -t 0 ] && [ -t 1 ] && [ "$no_confirm" != 1 ]; then
+        printf '%s\n\n' "$display_config"
+        if [ $# -gt 0 ]; then
+          printf 'Temporary arguments:'
+          printf ' %q' "$@"
+          printf '\n\n'
+        fi
+        if ! IFS= read -r -p "Press Enter to launch (Ctrl+C to cancel) "; then
+          printf '\n' >&2
+          exit 130
+        fi
       fi
 
       echo "Model:   $model_path" >&2
       echo "Backend: $server" >&2
-      exec "$server" --model "$model_path" "''${model_args[@]}"
+      exec "$server" "''${server_args[@]}"
     '';
   };
 

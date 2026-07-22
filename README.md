@@ -372,14 +372,13 @@ llm list
 llm PROVIDER/MODEL
 ```
 
-The first launch creates `<model>.gguf.llm.conf` beside the selected GGUF. Each
-interactive launch presents the saved llama-server arguments in a prefilled
-terminal editor. Edit the arguments if needed, then press Enter to save the
-configuration and start the server. This editor is also shown during first
-creation. Options written after the model name are appended before it opens.
+The first launch creates `<model>.gguf.llm.conf` beside the selected GGUF as a
+complete, grouped `llama-server` recipe. Interactive launches print that file
+verbatim and wait for Enter before starting. Edit the sidecar with any text
+editor; options written after the model name apply only to that launch.
 
-Set `LLM_NO_EDIT=1` to launch the saved configuration directly. Non-interactive
-invocations also skip the editor automatically. The server exposes model ID
+Set `LLM_NO_CONFIRM=1` to launch without printing or prompting. Non-interactive
+invocations also skip confirmation automatically. The server exposes model ID
 `local` at `http://127.0.0.1:8080/v1` unless its saved arguments change those
 defaults.
 
