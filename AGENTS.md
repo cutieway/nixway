@@ -19,11 +19,12 @@ This is Lexi's declarative NixOS configuration. Keep it minimal, understandable,
 - At minimum run `git diff --check` and `nix flake check` after Nix changes. Update `README.md` when installation, recovery, storage, or everyday commands change.
 - Preserve unrelated changes and keep edits focused. Editing files does not alter the running system.
 
-## OpenCode + llama.cpp
+## AI harnesses + llama.cpp
 
-- OpenCode config lives in `~/.config/opencode/opencode.jsonc`. Use `@ai-sdk/openai-compatible` npm provider for llama.cpp, not the built-in `openai` provider — otherwise thinking/reasoning responses break.
-- When switching providers, clear `~/.cache/opencode` and start a **new session** (broken sessions have corrupted message state).
-- Model ID must match `--alias` in the `llm` wrapper (currently `local`).
+- Treat each AI harness as a replaceable client of the local llama.cpp server. Do not assume a particular harness, configuration path, cache layout, or provider name; inspect the selected harness before changing it.
+- Connect through the harness's generic OpenAI-compatible adapter, normally using `http://127.0.0.1:8080/v1`. Avoid first-party OpenAI integrations that impose vendor-specific authentication or message semantics, and verify reasoning, streaming, and tool calls with the chosen adapter.
+- The harness model ID must match `--alias` in the `llm` wrapper (currently `local`).
+- After changing a provider adapter, base URL, model ID, or message schema, start a new session. Clear only that harness's cache if stale or corrupted session state persists.
 - PrismML prebuilt binaries discover their dynamic `libggml-*.so` backends beside the executable. Keep the fork's executables and libraries in the same output directory; registrations made by a helper process do not survive `exec`.
 
 ## Durable learning
