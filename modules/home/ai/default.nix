@@ -136,10 +136,10 @@ llama-server \\
   # -----------------------------------------------------------------
   # 5. SAMPLING & GENERATION DEFAULTS
   # -----------------------------------------------------------------
-  --temp 0.7 \\
-  --top-k 20 \\
+  --temp 0.6 \\
+  --top-k 40 \\
   --top-p 0.95 \\
-  --min-p 0.00 \\
+  --min-p 0.05 \\
   --presence-penalty 0.0 \\
   --repeat-penalty 1.0
 EOF
@@ -176,7 +176,7 @@ EOF
         echo "  -t N, --threads N       CPU generation threads"
         echo "  --no-mmap               load model fully into RAM"
         echo "  --mlock                 lock model in RAM (prevents swapping)"
-        echo "  --temp N                temperature (default 0.7)"
+        echo "  --temp N                temperature (default 0.6)"
         echo "  --seed N                random seed (-1 = random)"
         echo "  --host ADDR             bind address (default 127.0.0.1)"
         echo "  --port N                port (default 8080)"
