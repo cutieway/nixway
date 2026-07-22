@@ -29,12 +29,12 @@ let
       for f in lib*.so*; do
         test -f "$f" && cp -a "$f" $out/lib/
       done
-
+      # Symlink CPU backend so ggml finds it by its standard name
+      ln -sf libggml-cpu-x64.so $out/lib/libggml-cpu.so
       for f in $out/libexec/llama-cpp-prism/*; do
         if [ -x "$f" ] && [ ! -L "$f" ]; then
           wrapProgram "$f" \
-            --set GGML_BACKEND_PATH "$out/lib" \
-            --prefix LD_LIBRARY_PATH : "$out/lib"
+            --set LD_LIBRARY_PATH "$out/lib"
         fi
       done
     '';
