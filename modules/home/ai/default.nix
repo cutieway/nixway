@@ -97,6 +97,7 @@ EOF
         echo "  LLM_CTX_SIZE      context window (default: 65536)"
         echo "  LLM_CACHE_TYPE_K  key cache type (default: q8_0)"
         echo "  LLM_CACHE_TYPE_V  value cache type (default: q8_0)"
+        echo "  LLM_FIT_TARGET    auto-fit VRAM reserve in MiB (default: 2048)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
         echo ""
         echo "Common llama-server flags (pass any after model):"
@@ -200,12 +201,14 @@ EOF
       echo "Model:   $model_path" >&2
       echo "Backend: $server" >&2
       echo "Context: ''${LLM_CTX_SIZE:-65536}" >&2
+      echo "VRAM reserve: ''${LLM_FIT_TARGET:-2048} MiB" >&2
 
       exec "$server" \
         --model "$model_path" \
         --alias "''${LLM_MODEL_ALIAS:-local}" \
         --ctx-size "''${LLM_CTX_SIZE:-65536}" \
         -ngl auto \
+        --fit-target "''${LLM_FIT_TARGET:-2048}" \
         --parallel 1 \
         --flash-attn auto \
         --cache-type-k "''${LLM_CACHE_TYPE_K:-q8_0}" \
