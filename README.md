@@ -377,6 +377,22 @@ complete, grouped `llama-server` recipe. Interactive launches print that file
 verbatim and wait for Enter before starting. Edit the sidecar with any text
 editor; options written after the model name apply only to that launch.
 
+New configs use automatic GPU fitting with a 2 GiB VRAM reserve, Flash
+Attention, memory mapping, quantized KV cache, and no server prompt-cache RAM.
+The wrapper also defaults `GGML_OP_OFFLOAD_MIN_BATCH` to `1`; set it explicitly
+in the environment to override that threshold.
+
+For the 35B Qwen MoE model on this host, change only these lines in its sidecar:
+
+```text
+-ngl all
+--n-cpu-moe 30
+--no-mmap
+```
+
+This keeps ordinary 9B models on the automatic, fully GPU-resident path while
+using the measured hybrid expert-offload profile for the larger MoE model.
+
 Set `LLM_NO_CONFIRM=1` to launch without printing or prompting. Non-interactive
 invocations also skip confirmation automatically. The server exposes model ID
 `local` at `http://127.0.0.1:8080/v1` unless its saved arguments change those

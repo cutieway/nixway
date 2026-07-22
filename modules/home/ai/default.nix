@@ -42,6 +42,7 @@ let
     runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils ];
     text = ''
       models_dir="''${LLM_MODELS_DIR:-$HOME/.lmstudio/models}"
+      export GGML_OP_OFFLOAD_MIN_BATCH="''${GGML_OP_OFFLOAD_MIN_BATCH:-1}"
 
       pick_model() {
         dir="$1"
@@ -113,7 +114,7 @@ llama-server \\
   # 2. HARDWARE ACCELERATION & GPU OFFLOAD
   # -----------------------------------------------------------------
   -ngl auto \\
-  --flash-attn auto \\
+  --flash-attn on \\
   --threads -1 \\
   --mmap \\
   --fit-target ''${LLM_FIT_TARGET:-2048} \\
@@ -126,7 +127,7 @@ llama-server \\
   --ubatch-size 1024 \\
   --cache-type-k ''${LLM_CACHE_TYPE_K:-q8_0} \\
   --cache-type-v ''${LLM_CACHE_TYPE_V:-q8_0} \\
-  --cache-reuse 256 \\
+  --cache-ram 0 \\
   # -----------------------------------------------------------------
   # 4. SERVER, NETWORKING & CONCURRENCY
   # -----------------------------------------------------------------
@@ -168,6 +169,7 @@ EOF
         echo "  LLM_FIT_TARGET    VRAM reserve used when creating a config (default: 2048)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
         echo "  LLM_NO_CONFIRM    set to 1 to launch without printing or prompting"
+        echo "  GGML_OP_OFFLOAD_MIN_BATCH  operation offload threshold (default: 1)"
         echo ""
         echo "Common llama-server flags (pass any after model):"
         echo "  -ngl VALUE              GPU layers: auto, all, or an exact number"
