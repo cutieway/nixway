@@ -24,6 +24,7 @@ This is Lexi's declarative NixOS configuration. Keep it minimal, understandable,
 - OpenCode config lives in `~/.config/opencode/opencode.jsonc`. Use `@ai-sdk/openai-compatible` npm provider for llama.cpp, not the built-in `openai` provider — otherwise thinking/reasoning responses break.
 - When switching providers, clear `~/.cache/opencode` and start a **new session** (broken sessions have corrupted message state).
 - Model ID must match `--alias` in the `llm` wrapper (currently `local`).
+- PrismML prebuilt binaries discover their dynamic `libggml-*.so` backends beside the executable. Keep the fork's executables and libraries in the same output directory; registrations made by a helper process do not survive `exec`.
 
 ## Durable learning
 

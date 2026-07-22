@@ -3,62 +3,6 @@
 let
   llamaCpp = pkgs.llama-cpp-rocm;
 
-  backendLoader = pkgs.stdenv.mkDerivation {
-    pname = "llama-backend-loader";
-    version = "1";
-    dontUnpack = true;
-    buildInputs = [ pkgs.glibc ];
-    installPhase = ''
-      mkdir -p $out/bin
-      cat > $out/bin/llama-backend-loader.c << 'EOF'
-#define _GNU_SOURCE
-#include <dlfcn.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <program> [args...]\n", argv[0]);
-        return 1;
-    }
-
-    const char *lib_dir = getenv("LLAMA_BACKEND_LIB_DIR");
-    if (!lib_dir) {
-        fprintf(stderr, "LLAMA_BACKEND_LIB_DIR not set\n");
-        return 1;
-    }
-
-    // Build paths and load each backend
-    const char *backends[] = {"libggml-cpu-x64.so", "libggml-hip.so", NULL};
-    for (int i = 0; backends[i]; i++) {
-        char path[4096];
-        snprintf(path, sizeof(path), "%s/%s", lib_dir, backends[i]);
-
-        void *handle = dlopen(path, RTLD_NOW | RTLD_GLOBAL);
-        if (!handle) {
-            fprintf(stderr, "Warning: failed to dlopen %s: %s\n", path, dlerror());
-            continue;
-        }
-
-        // Call ggml_backend_init to register the backend
-        void (*init)(void) = dlsym(handle, "ggml_backend_init");
-        if (init) {
-            init();
-        }
-    }
-
-    execvp(argv[1], argv + 1);
-    perror("execvp");
-    return 1;
-}
-EOF
-      $CC -O2 -o $out/bin/backend-loader $out/bin/llama-backend-loader.c -ldl
-      rm $out/bin/llama-backend-loader.c
-    '';
-  };
-
   llamaCppPrism = pkgs.stdenvNoCC.mkDerivation {
     pname = "llama-cpp-prism";
     version = "prism-b9596-9fcaed7";
@@ -68,7 +12,7 @@ EOF
       hash = "sha256-UJA2c4QF9Xlqnr292h3gOnzXJJRPr7K0cuPQUB4tsfU=";
     };
 
-    nativeBuildInputs = [ pkgs.autoPatchelfHook pkgs.makeWrapper ];
+    nativeBuildInputs = [ pkgs.autoPatchelfHook ];
     buildInputs = with pkgs; [
       openssl
       gcc.cc.lib
@@ -78,12 +22,12 @@ EOF
     ];
 
     installPhase = ''
-      mkdir -p $out/lib $out/libexec/llama-cpp-prism
+      mkdir -p $out/bin
       for f in llama-* rpc-server; do
-        test -f "$f" -a -x "$f" && cp -a "$f" $out/libexec/llama-cpp-prism/
+        test -f "$f" -a -x "$f" && cp -a "$f" $out/bin/
       done
       for f in lib*.so*; do
-        test -f "$f" && cp -a "$f" $out/lib/
+        test -f "$f" && cp -a "$f" $out/bin/
       done
     '';
 
@@ -93,37 +37,9 @@ EOF
     };
   };
 
-  prismWithLoader = pkgs.stdenvNoCC.mkDerivation {
-    name = "llama-cpp-prism-loaded";
-    buildInputs = [ pkgs.makeWrapper ];
-    phases = [ "installPhase" ];
-    installPhase = ''
-      mkdir -p $out/bin $out/libexec
-
-      # Symlink the backend loader
-      ln -s ${backendLoader}/bin/backend-loader $out/bin/
-
-      # Wrapper scripts that load both backends then exec the real binary
-      for bin in ${llamaCppPrism}/libexec/llama-cpp-prism/*; do
-        name=$(basename "$bin")
-        [ -x "$bin" ] || continue
-        [ -L "$bin" ] && continue
-
-        cat > "$out/bin/$name" << WRAP
-#! ${pkgs.bash}/bin/bash
-LLAMA_BACKEND_LIB_DIR=${llamaCppPrism}/lib \
-LD_LIBRARY_PATH=${llamaCppPrism}/lib:${pkgs.rocmPackages.clr}/lib \
-  ${backendLoader}/bin/backend-loader "$bin" "\$@"
-WRAP
-        chmod +x "$out/bin/$name"
-        ln -s "$bin" "$out/libexec/$name"
-      done
-    '';
-  };
-
   llm = pkgs.writeShellApplication {
     name = "llm";
-    runtimeInputs = [ llamaCpp prismWithLoader pkgs.coreutils pkgs.findutils ];
+    runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils ];
     text = ''
       models_dir="''${LLM_MODELS_DIR:-$HOME/.lmstudio/models}"
 
@@ -263,11 +179,14 @@ EOF
 
       case "''${LLM_BACKEND:-auto}" in
         prism)
-          server="${prismWithLoader}/bin/llama-server"
+          server="${llamaCppPrism}/bin/llama-server"
+          ;;
+        standard)
+          server="${llamaCpp}/bin/llama-server"
           ;;
         auto)
           case "$model_path" in
-            */prism-ml/*) server="${prismWithLoader}/bin/llama-server" ;;
+            */prism-ml/*) server="${llamaCppPrism}/bin/llama-server" ;;
             *)            server="${llamaCpp}/bin/llama-server" ;;
           esac
           ;;
