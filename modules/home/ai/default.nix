@@ -30,10 +30,11 @@ let
         test -f "$f" && cp -a "$f" $out/lib/
       done
 
-      backend="$out/lib/libggml-hip.so"
       for f in $out/libexec/llama-cpp-prism/*; do
         if [ -x "$f" ] && [ ! -L "$f" ]; then
-          wrapProgram "$f" --set GGML_BACKEND_PATH "$backend"
+          wrapProgram "$f" \
+            --set GGML_BACKEND_PATH "$out/lib" \
+            --prefix LD_LIBRARY_PATH : "$out/lib"
         fi
       done
     '';
