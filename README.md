@@ -373,10 +373,10 @@ llm PROVIDER/MODEL
 ```
 
 The first launch creates `<model>.gguf.llm.conf` beside the selected GGUF. Each
-interactive launch presents the saved llama-server arguments as an editable
-Readline command. Edit the arguments if needed, then press Enter to save the
-configuration and start the server. Options written after the model name are
-appended to the editable command before it is shown.
+interactive launch presents the saved llama-server arguments in a prefilled
+terminal editor. Edit the arguments if needed, then press Enter to save the
+configuration and start the server. This editor is also shown during first
+creation. Options written after the model name are appended before it opens.
 
 Set `LLM_NO_EDIT=1` to launch the saved configuration directly. Non-interactive
 invocations also skip the editor automatically. The server exposes model ID

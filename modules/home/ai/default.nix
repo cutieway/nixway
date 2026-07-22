@@ -39,7 +39,7 @@ let
 
   llm = pkgs.writeShellApplication {
     name = "llm";
-    runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils ];
+    runtimeInputs = [ llamaCpp llamaCppPrism pkgs.coreutils pkgs.findutils pkgs.gum ];
     text = ''
       models_dir="''${LLM_MODELS_DIR:-$HOME/.lmstudio/models}"
 
@@ -248,6 +248,12 @@ EOF
       fi
 
       saved_args="$(tr '\n' ' ' < "$config_path")"
+      if [ -z "''${saved_args//[[:space:]]/}" ]; then
+        default_config > "$config_path"
+        saved_args="$(tr '\n' ' ' < "$config_path")"
+        echo "Initialized empty config: $config_path" >&2
+      fi
+
       extra_args=""
       if [ $# -gt 0 ]; then
         printf -v extra_args ' %q' "$@"
@@ -258,11 +264,21 @@ EOF
       if [ -t 0 ] && [ -t 1 ] && [ "''${LLM_NO_EDIT:-0}" != 1 ]; then
         interactive=1
         printf -v quoted_model '%q' "$model_path"
-        if ! IFS= read -e -r \
-          -p "llama-server --model $quoted_model " \
-          -i "$launch_args" edited_args; then
+        if ! edited_args="$(
+          gum input \
+            --header="llama-server --model $quoted_model" \
+            --prompt="arguments> " \
+            --value="$launch_args" \
+            --char-limit 0 \
+            --width 0 \
+            --show-help
+        )"; then
           printf '\n' >&2
           exit 130
+        fi
+        if [ -z "''${edited_args//[[:space:]]/}" ]; then
+          echo "Empty edit ignored; keeping the saved launch arguments." >&2
+          edited_args="$launch_args"
         fi
         launch_args="$edited_args"
       fi
