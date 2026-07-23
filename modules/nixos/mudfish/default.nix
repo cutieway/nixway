@@ -145,6 +145,24 @@ in
       StateDirectoryMode = "0700";
       UMask = "0077";
       TimeoutStopSec = "15s";
+
+      # Defense-in-depth. Mudfish runs as root and wraps a third-party binary
+      # via bwrap (buildFHSEnv), so test coexistence with the inner sandbox
+      # when adjusting these.
+      NoNewPrivileges = true;
+      ProtectHome = true;
+      ProtectSystem = "strict";
+      CapabilityBoundingSet = [
+        "CAP_NET_ADMIN"
+        "CAP_NET_RAW"
+        "CAP_NET_BIND_SERVICE"
+      ];
+      RestrictAddressFamilies = [
+        "AF_INET"
+        "AF_INET6"
+        "AF_NETLINK"
+        "AF_UNIX"
+      ];
     };
   };
 }

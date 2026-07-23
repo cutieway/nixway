@@ -46,7 +46,7 @@
     enable = true;
     dns = "systemd-resolved";
     settings = {
-      connection."connection.dns-over-tls" = 2;
+      connection."dns-over-tls" = 2;
       "global-dns-domain-*".servers = builtins.concatStringsSep "," [
         "dns+tls://1.1.1.1#cloudflare-dns.com"
         "dns+tls://1.0.0.1#cloudflare-dns.com"
