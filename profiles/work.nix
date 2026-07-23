@@ -12,6 +12,7 @@
           # Keep AI agents together: they share the llm-agents flake pin and
           # are all advanced by update-ai.
           llmAgents.claude-code
+          llmAgents.claude-code-router
           llmAgents.hermes-agent
           llmAgents.opencode
           llmAgents.opencode2
