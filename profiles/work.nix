@@ -16,6 +16,7 @@
           llmAgents.opencode2
           pkgs.bun
           pkgs.gcc
+          pkgs.python3
           pkgs.openssl.dev
           pkgs.pkg-config
           pkgs.rustup
