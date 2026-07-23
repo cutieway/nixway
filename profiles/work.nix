@@ -13,7 +13,7 @@
           # are all advanced by update-ai.
           llmAgents.hermes-agent
           llmAgents.opencode
-          llmAgents.amp
+          llmAgents.opencode2
           pkgs.bun
           pkgs.gcc
           pkgs.openssl.dev
