@@ -354,11 +354,13 @@ rustup update stable
 
 AI agent packages in the work profile come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
-Hermes Agent is the first selected package:
+Hermes Agent, OpenCode, and Claude Code are currently selected:
 
 ```bash
 hermes setup
 hermes
+opencode
+claude
 ```
 
 Add future agents beside Hermes in `profiles/work.nix`; they use the same input

@@ -77,7 +77,6 @@ in
     htop
     mudfishUpdater
     nixwaySwitch
-    opencode
     sevenZipArkCompat
     tree
     unrar

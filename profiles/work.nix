@@ -12,6 +12,8 @@
           # Keep AI agents together: they share the llm-agents flake pin and
           # are all advanced by update-ai.
           llmAgents.hermes-agent
+          llmAgents.opencode
+          llmAgents.claude-code
           pkgs.bun
           pkgs.gcc
           pkgs.openssl.dev

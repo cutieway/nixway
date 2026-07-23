@@ -128,6 +128,7 @@ llama-server \\
   --cache-type-k ''${LLM_CACHE_TYPE_K:-q8_0} \\
   --cache-type-v ''${LLM_CACHE_TYPE_V:-q8_0} \\
   --cache-ram 0 \\
+  --no-cache-idle-slots \\
   # -----------------------------------------------------------------
   # 4. SERVER, NETWORKING & CONCURRENCY
   # -----------------------------------------------------------------
