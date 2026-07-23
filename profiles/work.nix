@@ -39,6 +39,7 @@
           llmAgents.claude-code
           claudeCodeRouter
           llmAgents.hermes-agent
+          llmAgents.openclaw
           llmAgents.opencode
           llmAgents.opencode2
           pkgs.bun
