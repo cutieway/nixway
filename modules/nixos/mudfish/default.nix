@@ -154,8 +154,17 @@ in
       ProtectSystem = "strict";
       CapabilityBoundingSet = [
         "CAP_NET_ADMIN"
-        "CAP_NET_RAW"
         "CAP_NET_BIND_SERVICE"
+        "CAP_NET_RAW"
+
+        # buildFHSEnv launches Mudfish through bwrap. Because this service runs
+        # as root, bwrap needs these capabilities to construct its mount and
+        # user namespaces before starting the wrapped binary.
+        "CAP_SETGID"
+        "CAP_SETUID"
+        "CAP_SYS_ADMIN"
+        "CAP_SYS_CHROOT"
+        "CAP_SYS_PTRACE"
       ];
       RestrictAddressFamilies = [
         "AF_INET"

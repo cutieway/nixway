@@ -43,7 +43,9 @@ The configuration has one owner for each layer:
 | Base NixOS and command-line tools | `modules/nixos/core/default.nix` |
 | Lexi's shell and user tools | `modules/home/core/default.nix` |
 | Lexi's personal applications | `home/lexi/home.nix` |
-| Gaming, study, and work additions | `profiles/*.nix` |
+| Selectable desktop, gaming, study, work, and AI bundles | `profiles/*.nix` |
+| Gaming system programs and services | `modules/nixos/gaming/default.nix` |
+| Gaming, study, work, and AI user configuration | `modules/home/<name>/default.nix` |
 
 NixOS owns system services and the Plasma desktop. Home Manager owns only
 Lexi's user packages and shell/editor configuration. It does not generate KDE
@@ -354,20 +356,24 @@ rustup update stable
 
 AI agent packages in the work profile come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
-Hermes Agent, OpenCode, and Amp are currently selected:
+Claude Code, Claude Code Router, Hermes Agent, OpenClaw, and both OpenCode
+channels are currently selected:
 
 ```bash
+claude
+ccr
 hermes setup
 hermes
+openclaw
 opencode
-amp
+opencode2
 ```
 
-Add future agents beside Hermes in `profiles/work.nix`; they use the same input
-and binary cache instead of requiring a flake input for every tool. Use
-`update-ai` to advance that shared input and rebuild all selected agent
-packages together. AI tools remain separate from routine system updates so an
-upstream agent build failure cannot block OS and desktop updates.
+Add future agents beside Hermes in `modules/home/work/default.nix`; they use
+the same input and binary cache instead of requiring a flake input for every
+tool. Use `update-ai` to advance that shared input and rebuild all selected
+agent packages together. AI tools remain separate from routine system updates
+so an upstream agent build failure cannot block OS and desktop updates.
 
 ### Local llama.cpp models
 
