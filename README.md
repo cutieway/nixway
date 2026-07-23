@@ -352,16 +352,20 @@ rustup default stable
 rustup update stable
 ```
 
-Hermes Agent comes from its pinned upstream flake:
+AI agent packages in the work profile come from the shared, pinned
+[`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
+Hermes Agent is the first selected package:
 
 ```bash
 hermes setup
 hermes
 ```
 
-Use `update-hermes` to advance that input explicitly. Hermes is kept separate
-from routine system updates so an upstream agent build failure cannot block OS
-and desktop updates.
+Add future agents beside Hermes in `profiles/work.nix`; they use the same input
+and binary cache instead of requiring a flake input for every tool. Use
+`update-ai` to advance that shared input and rebuild all selected agent
+packages together. AI tools remain separate from routine system updates so an
+upstream agent build failure cannot block OS and desktop updates.
 
 ### Local llama.cpp models
 
@@ -380,7 +384,9 @@ editor; options written after the model name apply only to that launch.
 New configs use automatic GPU fitting with a 2 GiB VRAM reserve, Flash
 Attention, memory mapping, quantized KV cache, and no server prompt-cache RAM.
 The wrapper also defaults `GGML_OP_OFFLOAD_MIN_BATCH` to `1`; set it explicitly
-in the environment to override that threshold.
+in the environment to override that threshold. Sampling defaults follow the
+Qwen precise-coding profile: temperature `0.6`, top-k `20`, top-p `0.95`, min-p
+`0.0`, presence penalty `0.0`, and repeat penalty `1.0`.
 
 For the 35B Qwen MoE model on this host, change only these lines in its sidecar:
 
@@ -450,9 +456,9 @@ Update Nixpkgs, Home Manager, and the CachyOS kernel input, then rebuild:
 update-system
 ```
 
-Use `update-kernel` for only the CachyOS kernel input, `update-hermes` to update
-Hermes separately, or `update-mudfish VERSION` to stage and review a Mudfish
-release. Ordinary rebuilds leave `flake.lock` unchanged.
+Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update all
+selected packages from `llm-agents.nix`, or `update-mudfish VERSION` to stage
+and review a Mudfish release. Ordinary rebuilds leave `flake.lock` unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through

@@ -138,9 +138,9 @@ llama-server \\
   # 5. SAMPLING & GENERATION DEFAULTS
   # -----------------------------------------------------------------
   --temp 0.6 \\
-  --top-k 40 \\
+  --top-k 20 \\
   --top-p 0.95 \\
-  --min-p 0.05 \\
+  --min-p 0.0 \\
   --presence-penalty 0.0 \\
   --repeat-penalty 1.0
 EOF

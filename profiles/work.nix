@@ -4,9 +4,14 @@
   home-manager.sharedModules = [
     (
       { inputs, pkgs, pkgs-unstable, ... }:
+      let
+        llmAgents = inputs.llm-agents.packages.${pkgs.stdenv.hostPlatform.system};
+      in
       {
         home.packages = [
-          inputs.hermes-agent.packages.${pkgs.stdenv.hostPlatform.system}.default
+          # Keep AI agents together: they share the llm-agents flake pin and
+          # are all advanced by update-ai.
+          llmAgents.hermes-agent
           pkgs.bun
           pkgs.gcc
           pkgs.openssl.dev

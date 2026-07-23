@@ -8,7 +8,7 @@
 
     nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
 
-    hermes-agent.url = "github:NousResearch/hermes-agent";
+    llm-agents.url = "github:numtide/llm-agents.nix";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -17,9 +17,13 @@
   };
 
   nixConfig = {
-    extra-substituters = [ "https://cache.xinux.uz" ];
+    extra-substituters = [
+      "https://cache.xinux.uz"
+      "https://cache.numtide.com"
+    ];
     extra-trusted-public-keys = [
       "cache.xinux.uz:BXCrtqejFjWzWEB9YuGB7X2MV4ttBur1N8BkwQRdH+0="
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
     ];
   };
 

@@ -98,7 +98,7 @@ in
       ll = "eza -la --group-directories-first";
       rebuild = "nixway-switch";
       test-rebuild = "nh os test --accept-flake-config --show-activation-logs";
-      update-hermes = "update_hermes";
+      update-ai = "update_ai";
       update-kernel = "update_kernel";
       update-system = "update_system";
     };
@@ -109,9 +109,9 @@ in
           nixway-switch
       )
 
-      update_hermes() (
+      update_ai() (
         cd "${repoPath}" || return
-        nix flake update --accept-flake-config hermes-agent &&
+        nix flake update --accept-flake-config llm-agents &&
           nixway-switch
       )
 
