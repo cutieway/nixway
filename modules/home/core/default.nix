@@ -5,6 +5,8 @@
 }:
 
 let
+  # KDE Ark's p7zip plugin expects `7z` on PATH and doesn't recognise `7zz`.
+  # This compat layer symlinks 7zz → 7z so GUI archive extraction works.
   sevenZipArkCompat = pkgs.runCommand "7zip-ark-compat" { } ''
     mkdir -p "$out/bin"
     ln -s ${pkgs._7zz}/bin/7zz "$out/bin/7z"

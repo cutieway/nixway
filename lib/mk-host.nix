@@ -9,8 +9,8 @@
 }:
 
 let
-  hostModule = ../hosts + "/${hostname}";
-  homeModule = ../home + "/${username}/home.nix";
+  hostModule = ../hosts/${hostname};
+  homeModule = ../home/${username}/home.nix;
   repoPath = "/home/${username}/Projects/nixway";
 
   # Package set from the unstable nixpkgs channel, used for packages that need

@@ -42,6 +42,18 @@
 
   powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
 
+  # Current Btrfs layout (runtime mounts use stable filesystem labels):
+  #
+  #   /dev/sda6 (label "root") — subvols: root, home, nix, log
+  #     root → "/"
+  #     home → "/home"
+  #     nix  → "/nix"
+  #     log  → "/var/log"
+  #
+  #   /dev/sda5 (label "data") — preserved user data mounted at /mnt/data
+  #
+  # Bind mounts expose selected /mnt/data/home directories at their normal
+  # paths under /home/lexi. Never format or overwrite /dev/sda5.
   fileSystems =
     let
       btrfsRootOptions = subvolume: [

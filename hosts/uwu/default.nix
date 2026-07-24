@@ -13,6 +13,6 @@
   networking.hostName = hostname;
   system.stateVersion = "26.05";
 
-  # Enable hardware features when they are actually needed.
-  hardware.bluetooth.enable = false;
+  # Bluetooth is disabled by default in NixOS. If you need it later, install
+  # a Bluetooth adapter and enable it with hardware.bluetooth.enable = true.
 }
