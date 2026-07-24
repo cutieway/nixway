@@ -89,7 +89,7 @@ let
               '  ccr claude-nemotron    OpenCode Zen/nemotron-3-ultra-free     (1m context)' \
               '  ccr claude-north       OpenCode Zen/north-mini-code-free      (256k context)' \
               '  ccr claude-mimo        OpenCode Zen/mimo-v2.5-free            (200k context)' \
-              '  ccr claude-big-pickle  OpenCode Zen/big-pickle               (200k context)' \
+              '  ccr claude-big-pickle  OpenCode Zen/big-pickle                (200k context)' \
               '  ccr claude-laguna      OpenCode Zen/laguna-s-2.1-free         (128k context)' \
               "" \
               'Choose a profile explicitly; ccr claude does not launch a model.'
