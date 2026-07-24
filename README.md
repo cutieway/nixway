@@ -369,6 +369,29 @@ opencode
 opencode2
 ```
 
+CCR's OpenCode Zen provider normalizes reasoning only for its configured free
+models. DeepSeek maps `low`/`medium` to upstream `medium`, keeps `high`, and
+maps `xhigh`/`max` to upstream `max`. The other free reasoning models map
+`low`/`medium` to upstream `medium` and higher choices to upstream `high`.
+Models outside that allowlist pass through unchanged.
+
+Claude Code cannot change its process-wide auto-compaction window when `/model`
+switches between custom gateway models. Use the matching CCR profile instead:
+
+```bash
+ccr claude-deepseek
+ccr claude-nemotron
+ccr claude-north
+ccr claude-mimo
+ccr claude-big-pickle
+ccr claude-laguna
+```
+
+Each profile pins the model and its context window while leaving `/effort`
+available. Start a new profile session instead of changing to a model with a
+different context size inside an existing Claude session. The shorter
+`ccr claude` command remains an alias for `ccr claude-deepseek`.
+
 Add future agents beside Hermes in `modules/home/work/default.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
 tool. Use `update-ai` to advance that shared input and rebuild all selected

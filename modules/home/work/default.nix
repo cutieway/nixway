@@ -5,7 +5,9 @@ let
 
   # CCR 3.0 records DeepSeek V4 Flash's high/max tiers in reasoningOptions,
   # but its Codex catalog only checks this flattened capability when deciding
-  # whether to expose xhigh.
+  # whether to expose xhigh. Its bundled DeepSeek middleware also applies the
+  # high/max clamp to every model from the same provider. Keep both fixes
+  # narrowly scoped to the OpenCode Zen free models configured in CCR.
   claudeCodeRouter = llmAgents.claude-code-router.overrideAttrs (old: {
     postInstall = (old.postInstall or "") + ''
       package="$out/lib/node_modules/claude-code-router"
@@ -26,6 +28,51 @@ let
       fs.writeFileSync(catalogPath, `''${JSON.stringify(catalog, null, 2)}\n`);
       NODE
       done
+
+      node - "$package/node_modules/@the-next-ai/ai-gateway/dist/index.js" <<'NODE'
+      const fs = require("fs");
+      const gatewayPath = process.argv[2];
+      let source = fs.readFileSync(gatewayPath, "utf8");
+
+      const transformNeedle =
+        'let t=dS(e,n),r=cS(e,n);return';
+      const transformReplacement =
+        'if(!ccrZenFreeModel(n.model))return{ok:!0,value:e.upstreamRequest};' +
+        'let t=dS(e,n),r=ccrZenEffort(n.model,cS(e,n));return';
+
+      const effortNeedle =
+        'function Gt(e){if(typeof e!="string")return;let n=e.trim().toLowerCase().replace(/[-_\\s]+/g,"");' +
+        'if(n==="max"||n==="xhigh")return"max";' +
+        'if(n==="high"||n==="medium"||n==="low")return"high"}function Kg(e)';
+      const effortReplacement =
+        'function Gt(e){if(typeof e!="string")return;let n=e.trim().toLowerCase().replace(/[-_\\s]+/g,"");' +
+        'if(n==="max"||n==="xhigh"||n==="ultracode")return"max";' +
+        'if(n==="high")return"high";' +
+        'if(n==="medium")return"medium";' +
+        'if(n==="low"||n==="minimal"||n==="none")return"low"}' +
+        'function ccrZenModelId(e){return typeof e==="string"?e.trim().toLowerCase().split("/").pop():""}' +
+        'function ccrZenFreeModel(e){return new Set([' +
+        '"deepseek-v4-flash-free","nemotron-3-ultra-free","laguna-s-2.1-free",' +
+        '"north-mini-code-free","mimo-v2.5-free","big-pickle"' +
+        ']).has(ccrZenModelId(e))}' +
+        'function ccrZenEffort(e,n){if(!n)return;let t=ccrZenModelId(e);' +
+        'if(t==="deepseek-v4-flash-free")return n==="max"?"max":n==="high"?"high":"medium";' +
+        'return n==="max"||n==="high"?"high":"medium"}' +
+        'function Kg(e)';
+
+      for (const [needle, replacement, label] of [
+        [transformNeedle, transformReplacement, "free-model scope"],
+        [effortNeedle, effortReplacement, "effort mapping"]
+      ]) {
+        const matches = source.split(needle).length - 1;
+        if (matches !== 1) {
+          throw new Error(`Expected one CCR Zen ''${label} patch point, found ''${matches}`);
+        }
+        source = source.replace(needle, replacement);
+      }
+
+      fs.writeFileSync(gatewayPath, source);
+      NODE
     '';
   });
 in
