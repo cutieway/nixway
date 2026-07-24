@@ -6,8 +6,9 @@ let
   # CCR 3.0 records DeepSeek V4 Flash's high/max tiers in reasoningOptions,
   # but its Codex catalog only checks this flattened capability when deciding
   # whether to expose xhigh. Its bundled DeepSeek middleware also applies the
-  # high/max clamp to every model from the same provider. Keep both fixes
-  # narrowly scoped to the OpenCode Zen free models configured in CCR.
+  # high/max clamp to every model from the same provider, and Claude's compact
+  # request can omit DeepSeek's required reasoning_content from replayed tool
+  # calls. Keep all fixes narrowly scoped to the OpenCode Zen free models.
   claudeCodeRouter = llmAgents.claude-code-router.overrideAttrs (old: {
     postInstall = (old.postInstall or "") + ''
       package="$out/lib/node_modules/claude-code-router"
@@ -35,10 +36,13 @@ let
       let source = fs.readFileSync(gatewayPath, "utf8");
 
       const transformNeedle =
-        'let t=dS(e,n),r=cS(e,n);return';
+        'let t=dS(e,n),r=cS(e,n);return' +
+        '!t&&!r?{ok:!0,value:e.upstreamRequest}:';
       const transformReplacement =
         'if(!ccrZenFreeModel(n.model))return{ok:!0,value:e.upstreamRequest};' +
-        'let t=dS(e,n),r=ccrZenEffort(n.model,cS(e,n));return';
+        'let t=dS(e,n),r=ccrZenEffort(n.model,cS(e,n)),' +
+        'o=t!=="disabled"&&ccrDeepSeekToolReasoning(n);return' +
+        '!t&&!r&&!o?{ok:!0,value:e.upstreamRequest}:';
 
       const effortNeedle =
         'function Gt(e){if(typeof e!="string")return;let n=e.trim().toLowerCase().replace(/[-_\\s]+/g,"");' +
@@ -58,6 +62,12 @@ let
         'function ccrZenEffort(e,n){if(!n)return;let t=ccrZenModelId(e);' +
         'if(t==="deepseek-v4-flash-free")return n==="max"?"max":n==="high"?"high":"medium";' +
         'return n==="max"||n==="high"?"high":"medium"}' +
+        'function ccrDeepSeekToolReasoning(e){' +
+        'if(ccrZenModelId(e.model)!=="deepseek-v4-flash-free"||!Array.isArray(e.messages))return!1;' +
+        'let n=!1;e.messages=e.messages.map(t=>' +
+        't&&t.role==="assistant"&&Array.isArray(t.tool_calls)&&t.tool_calls.length>0&&' +
+        'typeof t.reasoning_content!=="string"?' +
+        '(n=!0,{...t,reasoning_content:""}):t);return n}' +
         'function Kg(e)';
 
       for (const [needle, replacement, label] of [

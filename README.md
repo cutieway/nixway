@@ -373,7 +373,11 @@ CCR's OpenCode Zen provider normalizes reasoning only for its configured free
 models. DeepSeek maps `low`/`medium` to upstream `medium`, keeps `high`, and
 maps `xhigh`/`max` to upstream `max`. The other free reasoning models map
 `low`/`medium` to upstream `medium` and higher choices to upstream `high`.
-Models outside that allowlist pass through unchanged.
+Models outside that allowlist pass through unchanged. For DeepSeek V4 Flash,
+the same scoped adapter also preserves existing `reasoning_content` and adds an
+empty value only when a replayed assistant tool call lacks the field. DeepSeek
+requires that field in thinking mode; without it, Claude Code compaction fails
+after a conversation uses tools.
 
 Claude Code cannot change its process-wide auto-compaction window when `/model`
 switches between custom gateway models. Use the matching CCR profile instead:
@@ -390,12 +394,13 @@ ccr claude-laguna
 Run `ccr claude` or `ccr claude --help` to print this profile list without
 launching a model.
 
-Each profile pins the model and its context window with
-`CLAUDE_CODE_MAX_CONTEXT_TOKENS` while leaving `/effort` available and
-auto-compaction on Claude's automatic policy. `CLAUDE_CODE_AUTO_COMPACT_WINDOW`
-does not declare model capacity; Claude caps it to the model limit it already
-knows. Start a new profile session instead of changing to a model with a
-different context size inside an existing Claude session.
+Each profile sets both context controls to the model capacity while leaving
+`/effort` available: `CLAUDE_CODE_MAX_CONTEXT_TOKENS` declares the custom
+gateway model's total context, and `CLAUDE_CODE_AUTO_COMPACT_WINDOW` enables
+Claude's normal autocompact reserve at that limit. The latter cannot declare
+capacity by itself because Claude caps it to the model limit it already knows.
+Start a new profile session instead of changing to a model with a different
+context size inside an existing Claude session.
 
 Add future agents beside Hermes in `modules/home/work/default.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
