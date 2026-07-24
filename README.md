@@ -387,10 +387,15 @@ ccr claude-big-pickle
 ccr claude-laguna
 ```
 
-Each profile pins the model and its context window while leaving `/effort`
-available. Start a new profile session instead of changing to a model with a
-different context size inside an existing Claude session. The shorter
-`ccr claude` command remains an alias for `ccr claude-deepseek`.
+Run `ccr claude` or `ccr claude --help` to print this profile list without
+launching a model.
+
+Each profile pins the model and its context window with
+`CLAUDE_CODE_MAX_CONTEXT_TOKENS` while leaving `/effort` available and
+auto-compaction on Claude's automatic policy. `CLAUDE_CODE_AUTO_COMPACT_WINDOW`
+does not declare model capacity; Claude caps it to the model limit it already
+knows. Start a new profile session instead of changing to a model with a
+different context size inside an existing Claude session.
 
 Add future agents beside Hermes in `modules/home/work/default.nix`; they use
 the same input and binary cache instead of requiring a flake input for every

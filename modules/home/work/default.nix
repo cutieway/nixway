@@ -75,13 +75,39 @@ let
       NODE
     '';
   });
+
+  claudeCodeRouterCli = pkgs.writeShellApplication {
+    name = "ccr";
+    text = ''
+      if [ "$#" -ge 1 ] && [ "$1" = "claude" ]; then
+        case "''${2-}" in
+          "" | -h | --help)
+            printf '%s\n' \
+              'Usage: ccr claude-<profile> [cli|app] [-- <claude arguments>]' \
+              'Available Claude Code profiles:' \
+              '  ccr claude-deepseek    OpenCode Zen/deepseek-v4-flash-free    (200k context)' \
+              '  ccr claude-nemotron    OpenCode Zen/nemotron-3-ultra-free     (1m context)' \
+              '  ccr claude-north       OpenCode Zen/north-mini-code-free      (256k context)' \
+              '  ccr claude-mimo        OpenCode Zen/mimo-v2.5-free            (200k context)' \
+              '  ccr claude-big-pickle  OpenCode Zen/big-pickle               (200k context)' \
+              '  ccr claude-laguna      OpenCode Zen/laguna-s-2.1-free         (128k context)' \
+              "" \
+              'Choose a profile explicitly; ccr claude does not launch a model.'
+            exit 0
+            ;;
+        esac
+      fi
+
+      exec ${claudeCodeRouter}/bin/ccr "$@"
+    '';
+  };
 in
 {
   home.packages = [
     # Keep AI agents together: they share the llm-agents flake pin and
     # are all advanced by update-ai.
     llmAgents.claude-code
-    claudeCodeRouter
+    claudeCodeRouterCli
     llmAgents.hermes-agent
     llmAgents.openclaw
     llmAgents.opencode
