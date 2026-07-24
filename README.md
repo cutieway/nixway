@@ -376,8 +376,10 @@ maps `xhigh`/`max` to upstream `max`. The other free reasoning models map
 Models outside that allowlist pass through unchanged. For DeepSeek V4 Flash,
 the same scoped adapter also preserves existing `reasoning_content` and adds an
 empty value only when a replayed assistant tool call lacks the field. DeepSeek
-requires that field in thinking mode; without it, Claude Code compaction fails
-after a conversation uses tools.
+requires that field in thinking mode. CCR's shared Anthropic-to-OpenAI adapter
+also places tool results before any user text carried in the same Anthropic
+message, as required by OpenAI chat ordering. Both details matter when Claude
+Code compacts a conversation containing tools.
 
 Claude Code cannot change its process-wide auto-compaction window when `/model`
 switches between custom gateway models. Use the matching CCR profile instead:

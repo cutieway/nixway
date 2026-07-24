@@ -8,7 +8,10 @@ let
   # whether to expose xhigh. Its bundled DeepSeek middleware also applies the
   # high/max clamp to every model from the same provider, and Claude's compact
   # request can omit DeepSeek's required reasoning_content from replayed tool
-  # calls. Keep all fixes narrowly scoped to the OpenCode Zen free models.
+  # calls. The bundled Anthropic-to-OpenAI adapter also emits mixed user text
+  # before its tool result, violating OpenAI's required message order. Keep the
+  # model-specific fixes scoped to the OpenCode Zen free models; fix the
+  # protocol ordering at the shared adapter where it originates.
   claudeCodeRouter = llmAgents.claude-code-router.overrideAttrs (old: {
     postInstall = (old.postInstall or "") + ''
       package="$out/lib/node_modules/claude-code-router"
@@ -70,9 +73,20 @@ let
         '(n=!0,{...t,reasoning_content:""}):t);return n}' +
         'function Kg(e)';
 
+      const toolResultOrderNeedle =
+        'let s=Bg(o.content);i&&r.push({role:"user",content:i});' +
+        'for(let a of s)r.push({role:"tool",tool_call_id:a.tool_call_id,' +
+        'content:a.result_format==="web_search"?Ug(a.content):a.content})';
+      const toolResultOrderReplacement =
+        'let s=Bg(o.content);' +
+        'for(let a of s)r.push({role:"tool",tool_call_id:a.tool_call_id,' +
+        'content:a.result_format==="web_search"?Ug(a.content):a.content});' +
+        'i&&r.push({role:"user",content:i})';
+
       for (const [needle, replacement, label] of [
         [transformNeedle, transformReplacement, "free-model scope"],
-        [effortNeedle, effortReplacement, "effort mapping"]
+        [effortNeedle, effortReplacement, "effort mapping"],
+        [toolResultOrderNeedle, toolResultOrderReplacement, "tool-result ordering"]
       ]) {
         const matches = source.split(needle).length - 1;
         if (matches !== 1) {
