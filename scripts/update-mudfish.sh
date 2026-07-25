@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # This file is embedded in the update-mudfish command by Home Manager.
 set -euo pipefail
 

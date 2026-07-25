@@ -30,7 +30,7 @@
   outputs =
     inputs@{ self, ... }:
     let
-      mkHost = import ./lib/mk-host.nix { inherit inputs; };
+      mkHost = import ./lib/mk-host.nix { inherit inputs self; };
     in
     {
       nixosConfigurations.uwu = mkHost {

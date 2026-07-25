@@ -11,6 +11,12 @@
     ../../modules/nixos/hardware/amd-desktop.nix
   ];
 
+  # Disk encryption note: This system dual-boots with Windows 11 and does not
+  # use LUKS or any block-level encryption. This is a deliberate choice to
+  # simplify dual-boot coexistence. /dev/sda5 (data) is explicitly excluded
+  # from formatting in AGENTS.md. Do not add disk encryption without also
+  # updating the Windows boot configuration and README.
+
   boot.loader = {
     systemd-boot = {
       enable = true;
@@ -33,7 +39,7 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
-  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault true;
   hardware.enableRedistributableFirmware = true;
   hardware.graphics = {
     enable = true;
@@ -129,10 +135,14 @@
     interval = "monthly";
     fileSystems = [
       "/"
+      "/var/log"
       "/mnt/data"
     ];
   };
 
+  # ZRAM provides compressed swap in memory. No swap partition is needed.
+  # Using 50% of RAM as recommended for most desktop workloads.
   swapDevices = [ ];
   zramSwap.enable = true;
+  zramSwap.memoryPercent = 50;
 }

@@ -59,7 +59,7 @@ let
         fi
       fi
 
-      for _ in {1..30}; do
+      for _ in {1..60}; do
         if curl --fail --silent --output /dev/null --connect-timeout 1 "$dashboard/"; then
           exec xdg-open "$dashboard/"
         fi
@@ -127,14 +127,14 @@ in
   systemd.services.mudfish = {
     description = "Mudfish game network accelerator";
     documentation = [ "https://docs.mudfish.net/en/docs/mudfish-cloud-vpn/" ];
-    after = [ "NetworkManager.service" ];
-    wants = [ "NetworkManager.service" ];
+    after = [ "NetworkManager.service" "network-online.target" ];
+    wants = [ "NetworkManager.service" "network-online.target" ];
     restartIfChanged = false;
 
     # This service is intentionally not enabled at boot. The Plasma menu entry
     # starts it only when Mudfish is needed for a game.
     serviceConfig = {
-      Type = "simple";
+      Type = "exec";
       ExecStartPre = "${mudfishPrepareState}/bin/mudfish-prepare-state";
       ExecStart = "${mudfish}/bin/mudfish";
       WorkingDirectory = "/var/lib/mudfish";
@@ -144,11 +144,15 @@ in
       ];
       StateDirectoryMode = "0700";
       UMask = "0077";
-      TimeoutStopSec = "15s";
+      TimeoutStopSec = "30s";
 
       # Defense-in-depth. Mudfish runs as root and wraps a third-party binary
       # via bwrap (buildFHSEnv), so test coexistence with the inner sandbox
       # when adjusting these.
+      # CAP_SYS_ADMIN partially defeats ProtectSystem=strict (bwrap's mount
+      # and user-namespace construction needs it), but this is an accepted
+      # risk. The service still drops all other privileges via NoNewPrivileges,
+      # ProtectHome, ProtectSystem, and restricted address families.
       NoNewPrivileges = true;
       ProtectHome = true;
       ProtectSystem = "strict";
@@ -164,12 +168,12 @@ in
         "CAP_SETUID"
         "CAP_SYS_ADMIN"
         "CAP_SYS_CHROOT"
-        "CAP_SYS_PTRACE"
       ];
       RestrictAddressFamilies = [
         "AF_INET"
         "AF_INET6"
         "AF_NETLINK"
+        "AF_PACKET"
         "AF_UNIX"
       ];
     };
