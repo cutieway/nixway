@@ -35,10 +35,13 @@ let
 
   nixwaySwitch = pkgs.writeShellApplication {
     name = "rebuild";
-    runtimeInputs = with pkgs; [ nh ];
+    runtimeInputs = with pkgs; [ nh git coreutils ];
     text = ''
       cd "${repoPath}"
       nh os switch --accept-flake-config --show-activation-logs "$@"
+      git add -A
+      git commit -m "uwu: auto rebuild $(date --iso-8601=seconds)" 2>/dev/null || true
+      git push 2>/dev/null || echo "push failed — no remote configured?"
     '';
   };
 in
