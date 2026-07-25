@@ -83,10 +83,16 @@ let
         'content:a.result_format==="web_search"?Ug(a.content):a.content});' +
         'i&&r.push({role:"user",content:i})';
 
+      const functionCallOutputNeedle =
+        'if(n==="reasoning")return null;let r=cg(e);';
+      const functionCallOutputReplacement =
+        'if(n==="reasoning")return null;if(n==="function_call_output")return{type:"message",role:"tool",content:[{type:"tool_result",tool_call_id:f(e.call_id)||f(e.id)||"",content:f(e.output)??""}]};let r=cg(e);';
+
       for (const [needle, replacement, label] of [
         [transformNeedle, transformReplacement, "free-model scope"],
         [effortNeedle, effortReplacement, "effort mapping"],
-        [toolResultOrderNeedle, toolResultOrderReplacement, "tool-result ordering"]
+        [toolResultOrderNeedle, toolResultOrderReplacement, "tool-result ordering"],
+        [functionCallOutputNeedle, functionCallOutputReplacement, "function_call_output mapping"]
       ]) {
         const matches = source.split(needle).length - 1;
         if (matches !== 1) {
