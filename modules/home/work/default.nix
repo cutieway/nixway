@@ -100,6 +100,13 @@ let
 
       const dgHistoryNeedle =
         'function dg(e){let n=ET(e.input);if(!n.ok)return n;let t=f(e.instructions),r=Zi(n.value,t);return r?I({model:f(e.model),instructions:t,input:r,temperature:k(e.temperature),top_p:k(e.top_p),max_output_tokens:k(e.max_output_tokens),stop:Gr(e.stop),stream:Q(e.stream),tools:es(e.tools),tool_choice:ns(e.tool_choice),reasoning_split:yg(e),reasoning:Cr(e.reasoning),thinking:Cr(e.thinking),output_config:Cr(e.output_config)}):E("OpenAI responses request requires non-empty input.")}';
+      const toolChoiceNeedle =
+        'let a=iS(e.standardRequest.tool_choice,e.standardRequest.tools);return a!==void 0&&(i.tool_choice=a)';
+      const toolChoiceReplacement =
+        'let a=iS(e.standardRequest.tool_choice,e.standardRequest.tools);' +
+        'if(a=="required"&&ccrZenFreeModel(e.standardRequest.model))a="auto";' +
+        'return a!==void 0&&(i.tool_choice=a)';
+
       const dgHistoryReplacement =
         'function dg(e){let i=e.input;if(e.previous_response_id&&ccrResponseStore.has(e.previous_response_id)){let p=ccrResponseStore.get(e.previous_response_id);if(Array.isArray(p)&&p.length>0){let c=Array.isArray(i)?i:[];i=[...p,...c]}}let n=ET(i);if(!n.ok)return n;let t=f(e.instructions),r=Zi(n.value,t);return r?I({model:f(e.model),instructions:t,input:r,temperature:k(e.temperature),top_p:k(e.top_p),max_output_tokens:k(e.max_output_tokens),stop:Gr(e.stop),stream:Q(e.stream),tools:es(e.tools),tool_choice:ns(e.tool_choice),reasoning_split:yg(e),reasoning:Cr(e.reasoning),thinking:Cr(e.thinking),output_config:Cr(e.output_config)}):E("OpenAI responses request requires non-empty input.")}';
 
@@ -110,7 +117,8 @@ let
         [functionCallOutputNeedle, functionCallOutputReplacement, "function_call_output mapping"],
         [responseStoreNeedle, responseStoreReplacement, "response store Map"],
         [ocSaveNeedle, ocSaveReplacement, "OC response saving"],
-        [dgHistoryNeedle, dgHistoryReplacement, "dg history reconstruction"]
+        [dgHistoryNeedle, dgHistoryReplacement, "dg history reconstruction"],
+        [toolChoiceNeedle, toolChoiceReplacement, "tool_choice for OC"]
       ]) {
         const matches = source.split(needle).length - 1;
         if (matches !== 1) {
