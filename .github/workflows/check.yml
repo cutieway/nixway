@@ -12,3 +12,17 @@ jobs:
         with:
           extra_nix_config: "accept-flake-config = true"
       - run: nix flake check
+
+  merge:
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          gh pr merge --squash --delete-branch \
+            "${{ github.event.pull_request.number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
