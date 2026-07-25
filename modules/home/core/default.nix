@@ -131,24 +131,28 @@ in
         nix flake update --accept-flake-config nix-cachyos-kernel &&
           nixway-switch
       )
+      readonly -f update_kernel
 
       update_ai() (
         cd "${repoPath}" || return
         nix flake update --accept-flake-config llm-agents &&
           nixway-switch
       )
+      readonly -f update_ai
 
      update_system() (
        cd "${repoPath}" || return
        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
          nixway-switch
      )
+     readonly -f update_system
 
       update_pi() (
         cd "${repoPath}" || return
         nix flake update --accept-flake-config nixpkgs nixpkgs-unstable &&
           nixway-switch
       )
+      readonly -f update_pi
     '';
   };
 
