@@ -41,7 +41,16 @@ let
       nh
     ];
     text = ''
-      repo="''${NH_FLAKE:-${repoPath}}"
+      repo="''${NH_FLAKE:-}"
+      if [ -z "$repo" ]; then
+        # Detect the git repo from the current working directory.
+        repo="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+      fi
+      if [ -z "$repo" ] || [ ! -d "$repo/.git" ]; then
+        echo "Error: NH_FLAKE is not set and not in a git repository." >&2
+        echo "Run this command from the nixway repository or set NH_FLAKE." >&2
+        exit 1
+      fi
       cd "$repo"
 
       if ! git config --get user.email >/dev/null; then

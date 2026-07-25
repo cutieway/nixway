@@ -85,6 +85,7 @@ in
     llmAgents.openclaw
     llmAgents.opencode
     llmAgents.opencode2
+    pkgs.pi-coding-agent
     pkgs.bun
     pkgs.gcc
     pkgs.python3
