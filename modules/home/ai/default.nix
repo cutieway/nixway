@@ -99,6 +99,98 @@ EOF
         done
       }
 
+      # Sidecar config flag allowlist (p8-002 security fix).
+      # Only known-safe tuning flags pass through. Dangerous flags like
+      # --host, --port, --listen, --api-key are always blocked here;
+      # networking is hardcoded by the wrapper (--host 127.0.0.1 --port 8080).
+      filter_config_args() {
+        local args=("$@")
+        local result=()
+        local i=0
+
+        while [ $i -lt "''${#args[@]}" ]; do
+          local arg="''${args[$i]}"
+
+          # Skip the leading "llama-server" if present
+          if [ $i -eq 0 ] && [ "$arg" = "llama-server" ]; then
+            result+=("$arg")
+            i=$((i + 1))
+            continue
+          fi
+
+          # Not a flag — treat as a value for a preceding flag
+          if ! [[ "$arg" == -* ]]; then
+            result+=("$arg")
+            i=$((i + 1))
+            continue
+          fi
+
+          # Check the flag against the allowlist
+          local takes_value=0
+          case "$arg" in
+            # ----- blocked (explicitly denied) -----
+            --host|--port|--listen|-m|--model)
+              echo "Error: sidecar config contains blocked flag '$arg'" >&2
+              exit 2
+              ;;
+            --lora*|--control-vector|--override-kv|--chat-template)
+              echo "Error: sidecar config contains blocked flag '$arg'" >&2
+              exit 2
+              ;;
+            --api-key|--proxy|--embedding|--cont-batching)
+              echo "Error: sidecar config contains blocked flag '$arg'" >&2
+              exit 2
+              ;;
+            --slot-save-path|--ssl-*|--grpc|--rpc)
+              echo "Error: sidecar config contains blocked flag '$arg'" >&2
+              exit 2
+              ;;
+            # ----- safe: performance / hardware -----
+            -ngl|--n-gpu-layers|--flash-attn|--threads|-t|--fit-target|--n-cpu-moe)
+              takes_value=1 ;;
+            # safe: boolean flags (no value)
+            --mmap|--no-mmap) ;;
+            # ----- safe: context / batching / KV cache -----
+            --ctx-size|--batch-size|--ubatch-size)
+              takes_value=1 ;;
+            --cache-type-k|--cache-type-v|--cache-ram|--no-cache-idle-slots)
+              takes_value=1 ;;
+            # ----- safe: concurrency -----
+            --parallel) takes_value=1 ;;
+            # ----- safe: sampling / generation -----
+            --temp|--top-k|--top-p|--min-p)
+              takes_value=1 ;;
+            --presence-penalty|--repeat-penalty)
+              takes_value=1 ;;
+            --seed|-n|--n-predict|--spec-type|--spec-draft-n-max)
+              takes_value=1 ;;
+            --reasoning-budget|--reasoning-budget-message)
+              takes_value=1 ;;
+            # ----- safe: model identity -----
+            --alias|--jinja) takes_value=1 ;;
+            # ----- unknown -> fail closed -----
+            *)
+              echo "Error: sidecar config contains unknown flag '$arg' — not in allowlist" >&2
+              exit 2
+              ;;
+          esac
+
+          result+=("$arg")
+          i=$((i + 1))
+          # Consume the value argument if this flag takes one and the next
+          # item doesn't look like another flag.
+          if [ "$takes_value" -eq 1 ] && [ $i -lt "''${#args[@]}" ] && ! [[ "''${args[$i]}" == -* ]]; then
+            result+=("''${args[$i]}")
+            i=$((i + 1))
+          fi
+        done
+
+        # Output null-delimited for safe consumption
+        for item in "''${result[@]}"; do
+          printf '%s\0' "$item"
+        done
+      }
+
       default_config() {
         local model_q
         printf -v model_q '%q' "$model_path"
@@ -130,10 +222,8 @@ llama-server \\
   --cache-ram 0 \\
   --no-cache-idle-slots \\
   # -----------------------------------------------------------------
-  # 4. SERVER, NETWORKING & CONCURRENCY
+  # 4. SERVER & CONCURRENCY  (networking is hardcoded by the wrapper)
   # -----------------------------------------------------------------
-  --host 127.0.0.1 \\
-  --port 8080 \\
   --parallel 1 \\
   # -----------------------------------------------------------------
   # 5. SAMPLING & GENERATION DEFAULTS
@@ -309,15 +399,25 @@ EOF
       fi
 
       display_config="$config_text"
-      if [ "''${#config_args[@]}" -gt 0 ] && [ "''${config_args[0]}" = llama-server ]; then
-        server_args=("''${config_args[@]:1}")
-      else
-        printf -v model_q '%q' "$model_path"
-        display_config="llama-server \\"$'\n'"  -m $model_q \\"$'\n'"$config_text"
-        server_args=(-m "$model_path" "''${config_args[@]}")
-        echo "Note: showing the existing arguments-only config as a complete command." >&2
-        echo "Delete it once to generate the new grouped format." >&2
+      # Filter config args through the allowlist before using them.
+      # This is the core security fix for p8-002 (sidecar config injection):
+      # even if an AI agent writes malicious flags to the config file,
+      # only known-safe tuning flags survive the filter.
+      filtered_args=()
+      if [ "''${#config_args[@]}" -gt 0 ]; then
+        raw_filtered="$(filter_config_args "''${config_args[@]}")"
+        if [ -n "$raw_filtered" ]; then
+          mapfile -d "" -t filtered_args < <(printf '%s' "$raw_filtered")
+        fi
       fi
+
+      if [ "''${#filtered_args[@]}" -gt 0 ] && [ "''${filtered_args[0]}" = llama-server ]; then
+        server_args=("''${filtered_args[@]:1}")
+      else
+        server_args=(-m "$model_path" "''${filtered_args[@]}")
+      fi
+      # Networking is always hardcoded — the sidecar can never override this.
+      server_args+=(--host 127.0.0.1 --port 8080)
       server_args+=("$@")
 
       no_confirm="''${LLM_NO_CONFIRM:-''${LLM_NO_EDIT:-0}}"
