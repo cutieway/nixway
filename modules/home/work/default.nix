@@ -91,7 +91,10 @@ in
     pkgs.python3
     pkgs.openssl.dev
     pkgs.pkg-config
-    pkgs.rustup
+    # Rust toolchain — minimal: cargo provides the compiler + package manager.
+    pkgs.cargo
+    pkgs.rustfmt
+    pkgs.clippy
   ];
 
   # Match the desktop's Original New UI Dark source theme. Settings stay

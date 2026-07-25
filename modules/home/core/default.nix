@@ -37,6 +37,7 @@ let
     name = "nixway-switch";
     runtimeInputs = with pkgs; [
       coreutils
+      gh
       git
       nh
     ];
@@ -58,10 +59,22 @@ let
       NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
 
       if ! git diff --cached --quiet; then
-        git commit -m "uwu: automatic system rebuild $(date --iso-8601=seconds)"
-      fi
+        current_branch="$(git branch --show-current)"
+        auto_branch="auto/uwu-$(date +%Y%m%d-%H%M%S)"
 
-      git push origin HEAD
+        git checkout -b "$auto_branch"
+        git commit -m "uwu: automatic system rebuild $(date --iso-8601=seconds)"
+        git push origin "$auto_branch"
+
+        if pr_url="$(gh pr create --base "$current_branch" --head "$auto_branch" --fill 2>&1)" && [ -n "$pr_url" ]; then
+          echo "Pull request created: $pr_url" >&2
+        else
+          echo "Warning: branch pushed but PR creation failed:" >&2
+          echo "  $pr_url" >&2
+        fi
+
+        git checkout "$current_branch"
+      fi
     '';
   };
 in
