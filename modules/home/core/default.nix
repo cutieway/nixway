@@ -34,52 +34,11 @@ let
   };
 
   nixwaySwitch = pkgs.writeShellApplication {
-    name = "nixway-switch";
-    runtimeInputs = with pkgs; [
-      coreutils
-      gh
-      git
-      nh
-    ];
+    name = "rebuild";
+    runtimeInputs = with pkgs; [ nh ];
     text = ''
-      repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
-        echo "Error: run this from the nixway repository." >&2
-        exit 1
-      }
-      cd "$repo"
-
-      if ! git config --get user.email >/dev/null; then
-        echo "Git needs an author email before it can create the automatic commit." >&2
-        echo 'Set one with: git config --file ~/.config/git/local user.email "YOUR_GITHUB_NOREPLY_EMAIL"' >&2
-        exit 1
-      fi
-
-      # Git flakes ignore untracked files, so stage the whole blueprint first.
-      git add -A
-      NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
-
-      if ! git diff --cached --quiet; then
-        current_branch="$(git branch --show-current)"
-        auto_branch="auto/uwu-$(date +%Y%m%d-%H%M%S)"
-
-        git checkout -b "$auto_branch"
-        git commit -m "uwu: automatic system rebuild $(date --iso-8601=seconds)"
-        git push origin "$auto_branch"
-
-        if pr_url="$(gh pr create --base "$current_branch" --head "$auto_branch" --fill 2>&1)" && [ -n "$pr_url" ]; then
-          echo "Pull request created: $pr_url" >&2
-          pr_number="$(echo "$pr_url" | grep -oP '/pull/\K\d+' || true)"
-          if [ -n "$pr_number" ]; then
-            gh pr merge "$pr_number" --auto --squash --delete-branch 2>&1 || true
-            echo " → auto-merge enabled (CI will merge when checks pass)" >&2
-          fi
-        else
-          echo "Warning: branch pushed but PR creation failed:" >&2
-          echo "  $pr_url" >&2
-        fi
-
-        git checkout "$current_branch"
-      fi
+      cd "${repoPath}"
+      nh os switch --accept-flake-config --show-activation-logs "$@"
     '';
   };
 in
@@ -96,7 +55,6 @@ in
     eza
     fastfetch
     ffmpeg
-    gh
     htop
     mudfishUpdater
     nixwaySwitch
@@ -118,7 +76,6 @@ in
     enable = true;
     shellAliases = {
       ll = "eza -la --group-directories-first";
-      rebuild = "nixway-switch";
       test-rebuild = "nh os test --accept-flake-config --show-activation-logs";
      update-ai = "update_ai";
      update-kernel = "update_kernel";
@@ -129,28 +86,28 @@ in
       update_kernel() (
         cd "${repoPath}" || return
         nix flake update --accept-flake-config nix-cachyos-kernel &&
-          nixway-switch
+          rebuild
       )
       readonly -f update_kernel
 
       update_ai() (
         cd "${repoPath}" || return
         nix flake update --accept-flake-config llm-agents &&
-          nixway-switch
+          rebuild
       )
       readonly -f update_ai
 
      update_system() (
        cd "${repoPath}" || return
        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
-         nixway-switch
+         rebuild
      )
      readonly -f update_system
 
       update_pi() (
         cd "${repoPath}" || return
         nix flake update --accept-flake-config nixpkgs nixpkgs-unstable &&
-          nixway-switch
+          rebuild
       )
       readonly -f update_pi
     '';

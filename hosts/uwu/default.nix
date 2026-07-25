@@ -3,16 +3,20 @@
 {
   imports = [
     ./hardware-configuration.nix
-    ../../profiles/desktop.nix
-    ../../profiles/gaming.nix
-    ../../profiles/study.nix
-    ../../profiles/work.nix
-    ../../profiles/ai.nix
+    ../../modules/nixos/core
+    ../../modules/nixos/desktop
+    ../../modules/nixos/gaming
+  ];
+
+  home-manager.sharedModules = [
+    ../../modules/home/core
+    ../../modules/home/desktop
+    ../../modules/home/gaming
+    ../../modules/home/study
+    ../../modules/home/work
+    ../../modules/home/ai
   ];
 
   networking.hostName = hostname;
   system.stateVersion = "26.05";
-
-  # Bluetooth is disabled by default in NixOS. If you need it later, install
-  # a Bluetooth adapter and enable it with hardware.bluetooth.enable = true.
 }
