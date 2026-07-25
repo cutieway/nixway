@@ -102,9 +102,10 @@ in
       ll = "eza -la --group-directories-first";
       rebuild = "nixway-switch";
       test-rebuild = "nh os test --accept-flake-config --show-activation-logs";
-      update-ai = "update_ai";
-      update-kernel = "update_kernel";
-      update-system = "update_system";
+     update-ai = "update_ai";
+     update-kernel = "update_kernel";
+     update-system = "update_system";
+      update-pi = "update_pi";
     };
     initExtra = ''
       update_kernel() (
@@ -119,9 +120,15 @@ in
           nixway-switch
       )
 
-      update_system() (
+     update_system() (
+       cd "${repoPath}" || return
+       nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
+         nixway-switch
+     )
+
+      update_pi() (
         cd "${repoPath}" || return
-        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
+        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable &&
           nixway-switch
       )
     '';
