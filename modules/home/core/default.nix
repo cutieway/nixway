@@ -41,20 +41,10 @@ let
       nh
     ];
     text = ''
-      repo=""
-      # NH_FLAKE may be set to a flake path that is not a git checkout
-      # (e.g. a Nix store path), so only use it if it has a .git directory.
-      if [ -n "''${NH_FLAKE:-}" ] && [ -d "$NH_FLAKE/.git" ]; then
-        repo="$NH_FLAKE"
-      fi
-      if [ -z "$repo" ]; then
-        repo="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-      fi
-      if [ -z "$repo" ] || [ ! -d "$repo/.git" ]; then
-        echo "Error: NH_FLAKE is not set and not in a git repository." >&2
-        echo "Run this command from the nixway repository or set NH_FLAKE." >&2
+      repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "Error: run this from the nixway repository." >&2
         exit 1
-      fi
+      }
       cd "$repo"
 
       if ! git config --get user.email >/dev/null; then
@@ -65,7 +55,7 @@ let
 
       # Git flakes ignore untracked files, so stage the whole blueprint first.
       git add -A
-      nh os switch --accept-flake-config --show-activation-logs "$@"
+      NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
 
       if ! git diff --cached --quiet; then
         git commit -m "uwu: automatic system rebuild $(date --iso-8601=seconds)"
