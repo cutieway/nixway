@@ -63,8 +63,8 @@ let
         '"north-mini-code-free","mimo-v2.5-free","big-pickle"' +
         ']).has(ccrZenModelId(e))}' +
         'function ccrZenEffort(e,n){if(!n)return;let t=ccrZenModelId(e);' +
-        'if(t==="deepseek-v4-flash-free")return n==="max"?"max":n==="high"?"high":"medium";' +
-        'return n==="max"||n==="high"?"high":"medium"}' +
+        'if(t==="deepseek-v4-flash-free")return n==="max"?"max":n==="high"?"high":n==="medium"?"medium":"low";' +
+        'return n==="max"||n==="high"?"high":n==="medium"?"medium":"low"}' +
         'function ccrDeepSeekToolReasoning(e){' +
         'if(ccrZenModelId(e.model)!=="deepseek-v4-flash-free"||!Array.isArray(e.messages))return!1;' +
         'let n=!1;e.messages=e.messages.map(t=>' +
