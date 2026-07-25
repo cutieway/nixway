@@ -25,7 +25,7 @@ git diff --check             # Check for whitespace errors
 **Ownership boundary** — each concern goes in exactly one layer:
 
 | Layer | Location | Owns |
-|-------|----------|------|
+| ------- | ---------- | ------ |
 | Flake entry | `flake.nix` | Inputs, outputs, `mkHost` call |
 | Host builder | `lib/mk-host.nix` | Combines NixOS + Home Manager for one host |
 | Host identity | `hosts/<hostname>/default.nix` | Imports profiles, `hostName`, `stateVersion` |
@@ -33,7 +33,7 @@ git diff --check             # Check for whitespace errors
 | NixOS modules | `modules/nixos/<name>/default.nix` (exceptions: `hardware/amd-desktop.nix`) | System-level services (core, desktop, amd-desktop, mudfish) |
 | Home modules | `modules/home/<name>/default.nix` | User-level config (core, desktop, ai) |
 | User home | `home/<username>/home.nix` | Personal packages, user identity |
-| Profiles | `profiles/<name>.nix` | Selectable bundles that import modules |
+| Module selection | `hosts/<hostname>/default.nix` | Inlined NixOS imports and home-manager sharedModules |
 
 **Profiles** compose the full config:
 

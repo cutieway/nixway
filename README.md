@@ -43,7 +43,7 @@ The configuration has one owner for each layer:
 | Base NixOS and command-line tools | `modules/nixos/core/default.nix` |
 | Lexi's shell and user tools | `modules/home/core/default.nix` |
 | Lexi's personal applications | `home/lexi/home.nix` |
-| Selectable desktop, gaming, study, work, and AI bundles | `profiles/*.nix` |
+| Selectable desktop, gaming, study, work, and AI bundles | inlined in `hosts/uwu/default.nix` |
 | Gaming system programs and services | `modules/nixos/gaming/default.nix` |
 | Gaming, study, work, and AI user configuration | `modules/home/<name>/default.nix` |
 
