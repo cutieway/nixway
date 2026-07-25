@@ -16,17 +16,6 @@
     };
   };
 
-  nixConfig = {
-    extra-substituters = [
-      "https://cache.xinux.uz"
-      "https://cache.numtide.com"
-    ];
-    extra-trusted-public-keys = [
-      "cache.xinux.uz:BXCrtqejFjWzWEB9YuGB7X2MV4ttBur1N8BkwQRdH+0="
-      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
-    ];
-  };
-
   outputs =
     inputs@{ self, ... }:
     let
