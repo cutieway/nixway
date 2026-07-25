@@ -37,8 +37,12 @@ let
     name = "rebuild";
     runtimeInputs = with pkgs; [ nh git coreutils ];
     text = ''
-      cd "${repoPath}"
-      nh os switch --accept-flake-config --show-activation-logs "$@"
+      repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "Error: run this from the nixway repository." >&2
+        exit 1
+      }
+      cd "$repo"
+      NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
       git add -A
       git commit -m "uwu: auto rebuild $(date --iso-8601=seconds)" 2>/dev/null || true
       git push 2>/dev/null || echo "push failed — no remote configured?"
