@@ -356,8 +356,9 @@ rustup update stable
 
 AI agent packages in the work profile come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
-Claude Code, Claude Code Router, Hermes Agent, OpenClaw, and both OpenCode
-channels are currently selected:
+CCR (ccr) is self-packaged at `packages/claude-code-router.nix` (v3.0.7) to
+fix gateway bugs present in the llm-agents pin. Claude Code, Claude Code
+Router, Hermes Agent, OpenClaw, and both OpenCode channels are selected:
 
 ```bash
 claude
@@ -370,16 +371,40 @@ opencode2
 ```
 
 CCR's OpenCode Zen provider normalizes reasoning only for its configured free
-models. DeepSeek maps `low`/`medium` to upstream `medium`, keeps `high`, and
-maps `xhigh`/`max` to upstream `max`. The other free reasoning models map
-`low`/`medium` to upstream `medium` and higher choices to upstream `high`.
-Models outside that allowlist pass through unchanged. For DeepSeek V4 Flash,
-the same scoped adapter also preserves existing `reasoning_content` and adds an
-empty value only when a replayed assistant tool call lacks the field. DeepSeek
-requires that field in thinking mode. CCR's shared Anthropic-to-OpenAI adapter
-also places tool results before any user text carried in the same Anthropic
-message, as required by OpenAI chat ordering. Both details matter when Claude
-Code compacts a conversation containing tools.
+models. The bundled `@the-next-ai/ai-gateway` normalises reasoning effort
+through its built-in `Qt` function before forwarding to the provider:
+
+| Claude/Codex sends | Qt normalises to | Sent to OpenCode Zen    |
+|--------------------|------------------|-------------------------|
+| `low`              | `high`           | `reasoning_effort: high` |
+| `medium`           | `high`           | `reasoning_effort: high` |
+| `high`             | `high`           | `reasoning_effort: high` |
+| `xhigh`            | `max`            | `reasoning_effort: max`  |
+| `max`              | `max`            | `reasoning_effort: max`  |
+
+This is a one-to-one normalisation, not a configurable mapping. Models that do
+not support the resulting effort level (e.g. those with no reasoning or only
+`none`/`high`) receive the value silently; those that support it use the
+advertised level. The plain `Qt` source (recovered from the minified bundle):
+
+```javascript
+function Qt(e) {
+  let n = e.trim().toLowerCase().replace(/[-_\s]+/g, "");
+  if (n === "max" || n === "xhigh") return "max";
+  if (n === "high" || n === "medium" || n === "low") return "high";
+}
+```
+
+Claude profiles are set so that non-DeepSeek models send `"high"` (Qt returns
+`"high"`) and DeepSeek profiles send `"xhigh"` (Qt returns `"max"`). Run
+`ccr-set-reasoning` to verify and correct effort levels in all profiles.
+For DeepSeek V4 Flash, the same adapter also preserves existing
+`reasoning_content` and adds an empty value only when a replayed assistant
+tool call lacks the field; DeepSeek requires that field in thinking mode.
+CCR's shared Anthropic-to-OpenAI adapter places tool results before any user
+text carried in the same Anthropic message, as required by OpenAI chat
+ordering. Both details matter when Claude Code compacts a conversation
+containing tools.
 
 Claude Code cannot change its process-wide auto-compaction window when `/model`
 switches between custom gateway models. Use the matching CCR profile instead:
@@ -391,6 +416,7 @@ ccr claude-north
 ccr claude-mimo
 ccr claude-big-pickle
 ccr claude-laguna
+ccr claude-ling
 ```
 
 Run `ccr claude` or `ccr claude --help` to print this profile list without

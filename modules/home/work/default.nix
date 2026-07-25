@@ -8,6 +8,45 @@ let
   # stream-disconnect and OpenCode-Zen-400 bugs.)
   claudeCodeRouter = pkgs.callPackage ../../../packages/claude-code-router.nix { };
 
+  # Ensure correct reasoning levels per model profile.
+  # CCR's bundled gateway normalises effort via its Qt function:
+  #   low/medium/high → "high"
+  #   xhigh/max       → "max"
+  # DeepSeek profiles use "xhigh" to get "max" reasoning, all others use "high".
+  ccrSetReasoning = pkgs.writeShellApplication {
+    name = "ccr-set-reasoning";
+    text = ''
+      # shellcheck shell=bash
+      set -euo pipefail
+
+      CCR_PROFILES="$HOME/.claude-code-router/profiles"
+
+      updated=0
+      for entry in "default-claude-code:xhigh" "claude-deepseek:xhigh" "claude-nemotron:high" "claude-north:high" "claude-mimo:high" "claude-big-pickle:high" "claude-laguna:high" "claude-ling:high"; do
+        dir="''${entry%%:*}"
+        want="''${entry##*:}"
+        settings="$CCR_PROFILES/$dir/claude/settings.json"
+        if [ -f "$settings" ]; then
+          current=$(jq -r '.effortLevel // empty' "$settings" 2>/dev/null || true)
+          if [ "$current" != "$want" ]; then
+            jq --arg e "$want" '.effortLevel = $e' "$settings" > "$settings.tmp" \
+              && mv "$settings.tmp" "$settings"
+            echo "fixed: $dir  $current → $want"
+            ((updated++))
+          fi
+        else
+          echo "warning: $dir settings not found -- run 'ccr $dir setup' first"
+        fi
+      done
+
+      if [ "$updated" -eq 0 ]; then
+        echo "All profiles have correct effortLevel values."
+      else
+        echo "Updated $updated profile(s)."
+      fi
+    '';
+  };
+
   claudeCodeRouterCli = pkgs.writeShellApplication {
     name = "ccr";
     text = ''
@@ -23,6 +62,7 @@ let
               '  ccr claude-mimo        OpenCode Zen/mimo-v2.5-free            (200k context)' \
               '  ccr claude-big-pickle  OpenCode Zen/big-pickle                (200k context)' \
               '  ccr claude-laguna      OpenCode Zen/laguna-s-2.1-free         (128k context)' \
+              '  ccr claude-ling        OpenCode Zen/ling-3.0-flash-free       (128k context)' \
               "" \
               'Choose a profile explicitly; ccr claude does not launch a model.'
             exit 0
@@ -40,6 +80,7 @@ in
     # are all advanced by update-ai.
     llmAgents.claude-code
     claudeCodeRouterCli
+    ccrSetReasoning
     llmAgents.hermes-agent
     llmAgents.openclaw
     llmAgents.opencode
