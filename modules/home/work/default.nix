@@ -88,11 +88,29 @@ let
       const functionCallOutputReplacement =
         'if(n==="reasoning")return null;if(n==="function_call_output")return{type:"message",role:"tool",content:[{type:"tool_result",tool_call_id:f(e.call_id)||f(e.id)||"",content:f(e.output)??""}]};let r=cg(e);';
 
+      const responseStoreNeedle =
+        '"use strict";var ay=Object.create;';
+      const responseStoreReplacement =
+        '"use strict";var ccrResponseStore=new Map();var ay=Object.create;';
+
+      const ocSaveNeedle =
+        ';return e.finishReason&&(r.finish_reason=e.finishReason),r}';
+      const ocSaveReplacement =
+        ';return e.finishReason&&(r.finish_reason=e.finishReason),r.id&&Array.isArray(r.output)&&ccrResponseStore.set(r.id,r.output),r}';
+
+      const dgHistoryNeedle =
+        'function dg(e){let n=ET(e.input);if(!n.ok)return n;let t=f(e.instructions),r=Zi(n.value,t);return r?I({model:f(e.model),instructions:t,input:r,temperature:k(e.temperature),top_p:k(e.top_p),max_output_tokens:k(e.max_output_tokens),stop:Gr(e.stop),stream:Q(e.stream),tools:es(e.tools),tool_choice:ns(e.tool_choice),reasoning_split:yg(e),reasoning:Cr(e.reasoning),thinking:Cr(e.thinking),output_config:Cr(e.output_config)}):E("OpenAI responses request requires non-empty input.")}';
+      const dgHistoryReplacement =
+        'function dg(e){let i=e.input;if(e.previous_response_id&&ccrResponseStore.has(e.previous_response_id)){let p=ccrResponseStore.get(e.previous_response_id);if(Array.isArray(p)&&p.length>0){let c=Array.isArray(i)?i:[];i=[...p,...c]}}let n=ET(i);if(!n.ok)return n;let t=f(e.instructions),r=Zi(n.value,t);return r?I({model:f(e.model),instructions:t,input:r,temperature:k(e.temperature),top_p:k(e.top_p),max_output_tokens:k(e.max_output_tokens),stop:Gr(e.stop),stream:Q(e.stream),tools:es(e.tools),tool_choice:ns(e.tool_choice),reasoning_split:yg(e),reasoning:Cr(e.reasoning),thinking:Cr(e.thinking),output_config:Cr(e.output_config)}):E("OpenAI responses request requires non-empty input.")}';
+
       for (const [needle, replacement, label] of [
         [transformNeedle, transformReplacement, "free-model scope"],
         [effortNeedle, effortReplacement, "effort mapping"],
         [toolResultOrderNeedle, toolResultOrderReplacement, "tool-result ordering"],
-        [functionCallOutputNeedle, functionCallOutputReplacement, "function_call_output mapping"]
+        [functionCallOutputNeedle, functionCallOutputReplacement, "function_call_output mapping"],
+        [responseStoreNeedle, responseStoreReplacement, "response store Map"],
+        [ocSaveNeedle, ocSaveReplacement, "OC response saving"],
+        [dgHistoryNeedle, dgHistoryReplacement, "dg history reconstruction"]
       ]) {
         const matches = source.split(needle).length - 1;
         if (matches !== 1) {
