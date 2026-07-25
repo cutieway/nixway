@@ -68,11 +68,7 @@ let
 
         if pr_url="$(gh pr create --base "$current_branch" --head "$auto_branch" --fill 2>&1)" && [ -n "$pr_url" ]; then
           echo "Pull request created: $pr_url" >&2
-          pr_number="$(echo "$pr_url" | grep -oP '/pull/\K\d+' || true)"
-          if [ -n "$pr_number" ]; then
-            gh pr merge "$pr_number" --auto --squash --delete-branch 2>&1 || true
-            echo " → auto-merge enabled (CI will merge when checks pass)" >&2
-          fi
+          echo " → CI will merge automatically when checks pass" >&2
         else
           echo "Warning: branch pushed but PR creation failed:" >&2
           echo "  $pr_url" >&2

@@ -1,6 +1,7 @@
 { ... }:
 {
   home-manager.sharedModules = [
-    ../modules/home/ai
+    ../modules/home/ai/llama.nix
+    ../modules/home/ai/agents.nix
   ];
 }
