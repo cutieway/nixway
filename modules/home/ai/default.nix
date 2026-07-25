@@ -259,7 +259,6 @@ EOF
         echo "  LLM_CACHE_TYPE_V  value cache used when creating a config (default: q8_0)"
         echo "  LLM_FIT_TARGET    VRAM reserve used when creating a config (default: 2048)"
         echo "  LLM_BACKEND       backend: auto, standard, or prism (default: auto)"
-        echo "  LLM_NO_CONFIRM    set to 1 to launch without printing or prompting"
         echo "  GGML_OP_OFFLOAD_MIN_BATCH  operation offload threshold (default: 1)"
         echo ""
         echo "Common llama-server flags (pass any after model):"
@@ -420,8 +419,7 @@ EOF
       server_args+=(--host 127.0.0.1 --port 8080)
       server_args+=("$@")
 
-      no_confirm="''${LLM_NO_CONFIRM:-''${LLM_NO_EDIT:-0}}"
-      if [ -t 0 ] && [ -t 1 ] && [ "$no_confirm" != 1 ]; then
+      if [ -t 0 ] && [ -t 1 ]; then
         printf '%s\n\n' "$display_config"
         if [ $# -gt 0 ]; then
           printf 'Temporary arguments:'

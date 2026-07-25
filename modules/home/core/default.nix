@@ -28,7 +28,7 @@ let
       nix
     ];
     text = ''
-      export NIXWAY_REPO=${repoPath}
+      repo=${repoPath}
       ${builtins.readFile ../../../scripts/update-mudfish.sh}
     '';
   };
