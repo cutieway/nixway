@@ -49,6 +49,11 @@ buildNpmPackage (finalAttrs: {
     "--omit=dev"
     "--legacy-peer-deps"
   ];
+
+  # The npm tarball provides prebuilt dist/ assets; skip the prepack
+  # lifecycle script (build:assets) that would try to rebuild them.
+  npmPackFlags = "--ignore-scripts";
+
   makeCacheWritable = true;
 
   nativeBuildInputs = [
