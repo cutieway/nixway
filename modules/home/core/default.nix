@@ -41,9 +41,13 @@ let
       nh
     ];
     text = ''
-      repo="''${NH_FLAKE:-}"
+      repo=""
+      # NH_FLAKE may be set to a flake path that is not a git checkout
+      # (e.g. a Nix store path), so only use it if it has a .git directory.
+      if [ -n "''${NH_FLAKE:-}" ] && [ -d "$NH_FLAKE/.git" ]; then
+        repo="$NH_FLAKE"
+      fi
       if [ -z "$repo" ]; then
-        # Detect the git repo from the current working directory.
         repo="$(git rev-parse --show-toplevel 2>/dev/null || true)"
       fi
       if [ -z "$repo" ] || [ ! -d "$repo/.git" ]; then
