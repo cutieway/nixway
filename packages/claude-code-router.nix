@@ -39,7 +39,7 @@ buildNpmPackage (finalAttrs: {
     hash = "sha256-oMPA9sAt4T87b+tobnnSEMch1xDhNg/J43Jwhki/42k=";
   };
 
-  npmDepsHash = lib.fakeHash;
+  npmDepsHash = "sha256-vh3bvF12WAZ6be9W+wsnZl4laZOmewEHEiiLL0YvNUo=";
 
   dontNpmBuild = true;
 
