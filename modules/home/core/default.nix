@@ -1,6 +1,7 @@
 {
   pkgs,
   repoPath,
+  inputs,
   ...
 }:
 
@@ -42,8 +43,11 @@ let
         exit 1
       }
       cd "$repo"
-      nh os switch --accept-flake-config --show-activation-logs "$@"
       git add -A
+      # Never remove this override: programs.nh.flake is the immutable self.outPath
+      # from the active generation. Without it, rebuild evaluates that stale store
+      # snapshot and can revert packages instead of using this working tree.
+      NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
       git commit -m "uwu: auto rebuild $(date --iso-8601=seconds)" 2>/dev/null || true
       git push 2>/dev/null || echo "push failed — no remote configured?"
     '';
@@ -63,11 +67,15 @@ in
     fastfetch
     ffmpeg
     htop
+    context7-mcp
+    mcp-nixos
     mudfishUpdater
     nixwaySwitch
     sevenZipArkCompat
     tree
     unrar
+  ] ++ [
+    inputs.openspec.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   programs.git = {
