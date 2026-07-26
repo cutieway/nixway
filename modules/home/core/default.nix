@@ -42,7 +42,7 @@ let
         exit 1
       }
       cd "$repo"
-      NH_FLAKE="$repo" nh os switch --accept-flake-config --show-activation-logs "$@"
+      nh os switch --accept-flake-config --show-activation-logs "$@"
       git add -A
       git commit -m "uwu: auto rebuild $(date --iso-8601=seconds)" 2>/dev/null || true
       git push 2>/dev/null || echo "push failed — no remote configured?"
@@ -84,38 +84,29 @@ in
     shellAliases = {
       ll = "eza -la --group-directories-first";
       test-rebuild = "nh os test --accept-flake-config --show-activation-logs";
-     update-ai = "update_ai";
-     update-kernel = "update_kernel";
-     update-system = "update_system";
+      update-ai = "update_ai";
+      update-kernel = "update_kernel";
+      update-system = "update_system";
       update-pi = "update_pi";
     };
     initExtra = ''
-      update_kernel() (
+      _nixway_update() {
         cd "${repoPath}" || return
-        nix flake update --accept-flake-config nix-cachyos-kernel &&
+        nix flake update --accept-flake-config "$@" &&
           rebuild
-      )
+      }
+      readonly -f _nixway_update
+
+      update_kernel() ( _nixway_update nix-cachyos-kernel )
       readonly -f update_kernel
 
-      update_ai() (
-        cd "${repoPath}" || return
-        nix flake update --accept-flake-config llm-agents &&
-          rebuild
-      )
+      update_ai() ( _nixway_update llm-agents )
       readonly -f update_ai
 
-     update_system() (
-       cd "${repoPath}" || return
-       nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel &&
-         rebuild
-     )
-     readonly -f update_system
+      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel )
+      readonly -f update_system
 
-      update_pi() (
-        cd "${repoPath}" || return
-        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable &&
-          rebuild
-      )
+      update_pi() ( _nixway_update nixpkgs nixpkgs-unstable )
       readonly -f update_pi
     '';
   };
