@@ -80,7 +80,6 @@ in
     claudeCodeRouterCli
     ccrSetReasoning
     llmAgents.hermes-agent
-    llmAgents.openclaw
     llmAgents.opencode
     llmAgents.opencode2
     (pkgs.callPackage ../../../packages/pi.nix { })
