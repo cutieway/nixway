@@ -21,7 +21,7 @@ installation.
 - NetworkManager with Plasma's network controls and authenticated Cloudflare
   DNS-over-TLS
 - AMD graphics with 64/32-bit Mesa, AMD CPU microcode, KVM, and the pinned
-  CachyOS release kernel
+  CachyOS release kernel downloaded from its official binary cache
 - Steam, Proton GE, GameMode, XIVLauncher, NTSync, and controller rules
 - Personal desktop, media, study, and development applications installed once
   in Lexi's Home Manager profile
