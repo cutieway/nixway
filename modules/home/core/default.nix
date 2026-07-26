@@ -74,8 +74,6 @@ in
     sevenZipArkCompat
     tree
     unrar
-  ] ++ [
-    inputs.openspec.packages.${pkgs.stdenv.hostPlatform.system}.default
   ];
 
   programs.git = {
