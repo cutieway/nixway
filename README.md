@@ -80,9 +80,8 @@ Useful places to configure the desktop:
 - **System Settings → Startup and Shutdown → Desktop Session** to restore the
   previous session at login
 
-Caps Lock is mapped to Super at the system keyboard layer and no longer toggles
-capitalization. All other shortcuts use Plasma defaults and remain editable.
-Common defaults include:
+Caps Lock uses its standard capitalization behavior. Shortcuts use Plasma
+defaults and remain editable. Common defaults include:
 
 | Key | Action |
 | --- | --- |

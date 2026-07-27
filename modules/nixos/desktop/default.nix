@@ -40,14 +40,13 @@
   # the Plasma module. OpenSSH owns the SSH agent independently.
   programs.ssh.startAgent = true;
 
-  # Preserve Lexi's input preference while leaving all other shortcuts to KDE.
+  # Use a standard US keyboard layout while leaving shortcuts to KDE.
   # Keyboard layout for SDDM's greeter and virtual consoles (TTYs).
   # The Plasma 6 Wayland session manages its own keyboard layout through
   # System Settings and is not affected by this setting.
   services.xserver.xkb = {
     layout = "us";
     model = "pc104";
-    options = "caps:super";
   };
 
   environment.systemPackages = [
