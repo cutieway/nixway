@@ -36,6 +36,7 @@ in
 {
   home.packages = [
     pkgs.discord
+    pkgs.lutris
     xivlauncher
   ];
 
