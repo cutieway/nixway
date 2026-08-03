@@ -97,9 +97,18 @@ in
     };
     initExtra = ''
       _nixway_update() {
-        cd "${repoPath}" || return
+        local repo
+        repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+          echo "Error: run this from the nixway repository." >&2
+          return 1
+        }
+        cd "$repo" || return
         nix flake update --accept-flake-config "$@" &&
-          rebuild
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "Inputs are already up to date; nothing to rebuild."
+          else
+            rebuild
+          fi
       }
       readonly -f _nixway_update
 

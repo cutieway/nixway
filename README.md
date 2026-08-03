@@ -518,11 +518,20 @@ nix flake check --accept-flake-config
 nh os build --accept-flake-config
 ```
 
-Update Nixpkgs, Home Manager, and the CachyOS kernel input, then rebuild:
+From the repository checkout, update Nixpkgs, Home Manager, and the CachyOS
+kernel input, then rebuild:
 
 ```bash
 update-system
 ```
+
+If the selected inputs and working tree are already unchanged, `update-system`
+exits after checking them instead of evaluating and switching the same system
+again. An actual input update can still download a large new closure even when
+the configuration files did not change; Nix reuses unchanged store paths. The
+update commands resolve the checkout from the current directory so that they
+write its `flake.lock`, never the immutable source snapshot of the active
+generation.
 
 Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update all
 selected packages from `llm-agents.nix`, or `update-mudfish VERSION` to stage
