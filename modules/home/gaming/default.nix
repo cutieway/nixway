@@ -37,6 +37,7 @@ in
   home.packages = [
     pkgs.discord
     pkgs.lutris
+    pkgs.faugus-launcher
     xivlauncher
   ];
 
