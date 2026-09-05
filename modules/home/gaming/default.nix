@@ -32,6 +32,7 @@ let
 
   home = config.home.homeDirectory;
   xlcoreData = "${home}/Public/xlcore";
+  wineVersion = pkgs.wineWow64Packages.staging.version;
 in
 {
   home.packages = [
@@ -51,7 +52,7 @@ in
     ".xlcore/pluginConfigs".source =
       config.lib.file.mkOutOfStoreSymlink "${xlcoreData}/pluginConfigs";
 
-    ".xlcore/compatibilitytool/Wine-Staging-11.8".source =
+    ".xlcore/compatibilitytool/Wine-Staging-${wineVersion}".source =
       xivlauncherWine;
   };
 }
