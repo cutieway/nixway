@@ -51,6 +51,7 @@
 
   environment.systemPackages = [
     pkgs.firefox
+    pkgs.kdePackages.kcalc
     pkgs.kdePackages.sddm-kcm
   ];
 }
