@@ -81,6 +81,8 @@ in
     ccrSetReasoning
     llmAgents.hermes-agent
     llmAgents.opencode
-    (pkgs.callPackage ../../../packages/pi.nix { })
+    (pkgs.callPackage ../../../packages/pi.nix {
+      pi-src = inputs.pi;
+    })
   ];
 }

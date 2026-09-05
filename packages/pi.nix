@@ -1,7 +1,6 @@
 {
   lib,
   buildNpmPackage,
-  fetchFromGitHub,
   fetchurl,
   versionCheckHook,
   writableTmpDirAsHomeHook,
@@ -9,19 +8,16 @@
   fd,
   makeBinaryWrapper,
   stdenvNoCC,
+  pi-src,
 }:
 buildNpmPackage (finalAttrs: {
   pname = "pi-coding-agent";
-  version = "0.82.1";
+  # Version derived from package.json in the flake source — no manual bump.
+  version = (lib.importJSON "${pi-src}/packages/coding-agent/package.json").version;
 
-  src = fetchFromGitHub {
-    owner = "earendil-works";
-    repo = "pi";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-LESpgd/KUoNqdBfnd1oyMN8coKm0Odbo9GYkUDry8Zk=";
-  };
+  src = pi-src;
 
-  npmDepsHash = "sha256-5pHRwxpKg95/phOcYHeWdvPJNtSOhiw7PRoVxsuh0RM=";
+  npmDepsHash = "sha256-K/KiukwTHwu4HE8hUu7ur3bxggwfO0WL+QDI0FtxP3I=";
 
   npmWorkspace = "packages/coding-agent";
 
@@ -36,7 +32,7 @@ buildNpmPackage (finalAttrs: {
   # models script that requires network access at build time).
   modelData = fetchurl {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${finalAttrs.version}.tgz";
-    hash = "sha256-L535UigItiHNNEmHZTfwPYqN+LjX7C1bGMapEKqFtJA=";
+    hash = "sha256-RhiL2stVWgdGagER85Y/IJMqFhmeTWz7jUSn/l/G40I=";
   };
 
   preBuild = ''
@@ -48,9 +44,15 @@ buildNpmPackage (finalAttrs: {
   buildPhase = ''
     runHook preBuild
 
-    npx tsgo -p packages/ai/tsconfig.build.json
+    # Build workspaces in dependency order (matches root build script).
+    npx tsgo -p packages/chord/tsconfig.build.json
+    npx tsgo -p packages/telemetry/tsconfig.build.json
     npx tsgo -p packages/tui/tsconfig.build.json
+    npx tsgo -p packages/ai/tsconfig.build.json
     npx tsgo -p packages/agent/tsconfig.build.json
+    npx tsgo -p packages/protocol/tsconfig.build.json
+    npx tsgo -p packages/client/tsconfig.build.json
+    npx tsgo -p packages/server/tsconfig.build.json
     npm run build --workspace=packages/coding-agent
 
     runHook postBuild
@@ -61,7 +63,12 @@ buildNpmPackage (finalAttrs: {
 
     for ws in @earendil-works/pi-ai:packages/ai \
               @earendil-works/pi-agent-core:packages/agent \
-              @earendil-works/pi-tui:packages/tui; do
+              @earendil-works/pi-tui:packages/tui \
+              @earendil-works/chord:packages/chord \
+              @earendil-works/pi-telemetry:packages/telemetry \
+              @earendil-works/pi-protocol:packages/protocol \
+              @earendil-works/pi-client:packages/client \
+              @earendil-works/pi-server:packages/server; do
       IFS=: read -r pkg src <<< "$ws"
       rm "$nm/$pkg"
       cp -r "$src" "$nm/$pkg"
@@ -81,8 +88,7 @@ buildNpmPackage (finalAttrs: {
   postFixup = "wrapProgram $out/bin/pi --prefix PATH : ${
     lib.makeBinPath [
       ripgrep
-      fd
-    ]
+      fd ]
   }";
 
   doInstallCheck = true;

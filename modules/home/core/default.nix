@@ -115,13 +115,13 @@ in
       update_kernel() ( _nixway_update nix-cachyos-kernel )
       readonly -f update_kernel
 
-      update_ai() ( _nixway_update llm-agents )
+      update_ai() ( _nixway_update llm-agents pi )
       readonly -f update_ai
 
-      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel )
+      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents pi )
       readonly -f update_system
 
-      update_pi() ( _nixway_update nixpkgs nixpkgs-unstable )
+      update_pi() ( _nixway_update pi )
       readonly -f update_pi
     '';
   };
