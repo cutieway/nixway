@@ -533,9 +533,11 @@ update commands resolve the checkout from the current directory so that they
 write its `flake.lock`, never the immutable source snapshot of the active
 generation.
 
-Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update all
-selected packages from `llm-agents.nix`, or `update-mudfish VERSION` to stage
-and review a Mudfish release. Ordinary rebuilds leave `flake.lock` unchanged.
+Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update the
+`llm-agents.nix` shared input and rebuild all selected agent packages together,
+`update-pi` to pull the latest pi-coding-agent tag and rebuild it, or
+`update-mudfish VERSION` to stage and review a Mudfish release. Ordinary rebuilds
+leave `flake.lock` unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through

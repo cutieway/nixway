@@ -115,10 +115,10 @@ in
       update_kernel() ( _nixway_update nix-cachyos-kernel )
       readonly -f update_kernel
 
-      update_ai() ( _nixway_update llm-agents pi )
+      update_ai() ( _nixway_update llm-agents )
       readonly -f update_ai
 
-      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents pi )
+      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents )
       readonly -f update_system
 
       update_pi() ( _nixway_update pi )
