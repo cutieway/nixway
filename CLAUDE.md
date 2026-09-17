@@ -31,13 +31,13 @@ git diff --check             # Check for whitespace errors
 | Host identity | `hosts/<hostname>/default.nix` | Imports profiles, `hostName`, `stateVersion` |
 | Hardware | `hosts/<hostname>/hardware-configuration.nix` | Disks, bootloader, CPU, GPU, filesystems, Btrfs subvols |
 | NixOS modules | `modules/nixos/<name>/default.nix` (exceptions: `hardware/amd-desktop.nix`) | System-level services (core, desktop, amd-desktop, mudfish) |
-| Home modules | `modules/home/<name>/default.nix` | User-level config (core, desktop, ai) |
+| Home modules | `modules/home/<name>/default.nix` | User-level config (core, ai, gaming, study, work) |
 | User home | `home/<username>/home.nix` | Personal packages, user identity |
 | Module selection | `hosts/<hostname>/default.nix` | Inlined NixOS imports and home-manager sharedModules |
 
 **Profiles** compose the full config:
 
-- `desktop.nix` → nixos/core + nixos/desktop + home/core + home/desktop
+- `desktop.nix` → nixos/core + nixos/desktop + home/core
 - `gaming.nix` → mudfish, Steam, GameMode, XIVLauncher, Wine, NTSync, controller support
 - `work.nix` → Zed (from unstable), rustup, bun, gcc, AI agents (claude-code, CCR, hermes, opencode)
 - `ai.nix` → home/ai (llama.cpp with PrismML ROCm fork, `llm` wrapper, amdgpu_top)

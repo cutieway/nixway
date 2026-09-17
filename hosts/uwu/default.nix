@@ -10,7 +10,6 @@
 
   home-manager.sharedModules = [
     ../../modules/home/core
-    ../../modules/home/desktop
     ../../modules/home/gaming
     ../../modules/home/study
     ../../modules/home/work
