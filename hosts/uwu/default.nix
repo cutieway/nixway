@@ -14,6 +14,7 @@
     ../../modules/home/study
     ../../modules/home/work
     ../../modules/home/ai
+    ../../modules/home/photogimp
   ];
 
   networking.hostName = hostname;

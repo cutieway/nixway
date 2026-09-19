@@ -342,6 +342,20 @@ dependencies change, but it never selects a new upstream Mudfish release. A
 running Mudfish service is not restarted by a rebuild; stopping and opening it
 again uses the version in the active system generation.
 
+## PhotoGIMP
+
+GIMP carries the [PhotoGIMP](https://github.com/Diolinux/PhotoGIMP) 3.1 preset,
+which rearranges tools and shortcuts to match Photoshop. Because GIMP rewrites
+`gimprc`, `shortcutsrc`, `tool-options/*` and similar files whenever it exits,
+the preset is copied into `~/.config/GIMP/<version>` by `modules/home/photogimp`
+during Home Manager activation instead of being linked read-only from the store.
+The existing configuration is saved to
+`~/.config/GIMP/<version>.photogimp-backup-<timestamp>` before the first copy
+and before every later PhotoGIMP version change, so GIMP settings made in the
+app survive until a new preset version replaces them. The launcher is renamed
+PhotoGIMP and uses the preset icon; drop the module import in
+`hosts/uwu/default.nix` to go back to plain GIMP, then delete those files.
+
 ## Development tools
 
 Zed, `rustup`, Bun, GCC, OpenSSL development files, and `pkg-config` are in the
