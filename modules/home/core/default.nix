@@ -29,7 +29,12 @@ let
       nix
     ];
     text = ''
-      repo=${repoPath}
+      # Resolve the live working tree, not the immutable store snapshot that
+      # repoPath points at, so the staged update can be written for review.
+      repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+        echo "Error: run this from the nixway repository." >&2
+        exit 1
+      }
       ${builtins.readFile ../../../scripts/update-mudfish.sh}
     '';
   };

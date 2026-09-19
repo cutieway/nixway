@@ -296,7 +296,7 @@ remain opt-in.
 
 ### Mudfish
 
-Mudfish 6.5.3 is packaged as an on-demand, headless NixOS service. Open the
+Mudfish 6.5.4 is packaged as an on-demand, headless NixOS service. Open the
 application launcher, search for **Mudfish**, and click it. After the graphical
 administrator prompt, the launcher starts Mudfish and opens
 `http://127.0.0.1:8282` in the default browser. Clicking the icon again while

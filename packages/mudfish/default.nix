@@ -18,7 +18,7 @@
 
 let
   pname = "mudfish";
-  version = "6.5.3";
+  version = "6.5.4";
 
   unwrapped = stdenvNoCC.mkDerivation {
     pname = "${pname}-unwrapped";
@@ -26,7 +26,7 @@ let
 
     src = fetchurl {
       url = "https://mudfish.net/releases/mudfish-${version}-linux-x86_64.sh";
-      hash = "sha256-WJaYhdHCKoRXnBFESanFnsFo8fOnPEg6PG8N+0/zuBg=";
+      hash = "sha256-3fiXYC/fcdv2y/AWnbCLjfB+jC4QVDIn/QaHjn2X1/w=";
     };
 
     nativeBuildInputs = [
