@@ -281,9 +281,10 @@ Keep its physical switch in PS4 mode, enable PlayStation support in Steam, and
 enable Steam Input for the relevant game or XIVLauncher shortcut.
 
 XIVLauncher is wrapped with an empty `SteamVirtualGamepadInfo` value to avoid an
-older Wine/SDL controller blacklist. Wine staging is exposed at
-`~/.xlcore/compatibilitytool/Wine-Staging-11.8`; select its `bin` directory as
-XIVLauncher's custom Wine binary directory.
+older Wine/SDL controller blacklist. Wine staging is taken from the
+`nixpkgs-unstable` channel, since `nixos-26.05` still pins an older build, and
+exposed at `~/.xlcore/compatibilitytool/Wine-Staging-11.16`; select its `bin`
+directory as XIVLauncher's custom Wine binary directory.
 
 Use this Steam launch option when a game should use GameMode:
 

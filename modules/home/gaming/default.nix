@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, pkgs-unstable, config, ... }:
 
 let
   # XIVLauncher with the Steam virtual-controller workaround applied.
@@ -13,10 +13,13 @@ let
     '';
   };
 
+  # Wine staging from the unstable channel: nixos-26.05 still pins 11.8.
+  wine = pkgs-unstable.wineWow64Packages.staging;
+
   # XIVLauncher's Wine build with fsync and esync disabled so Wine uses NTsync.
   xivlauncherWine = pkgs.symlinkJoin {
-    name = "wine-staging-11.8-xivlauncher";
-    paths = [ pkgs.wineWow64Packages.staging ];
+    name = "wine-staging-${wine.version}-xivlauncher";
+    paths = [ wine ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
 
     postBuild = ''
@@ -32,7 +35,6 @@ let
 
   home = config.home.homeDirectory;
   xlcoreData = "${home}/Public/xlcore";
-  wineVersion = pkgs.wineWow64Packages.staging.version;
 in
 {
   home.packages = [
@@ -52,7 +54,7 @@ in
     ".xlcore/pluginConfigs".source =
       config.lib.file.mkOutOfStoreSymlink "${xlcoreData}/pluginConfigs";
 
-    ".xlcore/compatibilitytool/Wine-Staging-${wineVersion}".source =
+    ".xlcore/compatibilitytool/Wine-Staging-${wine.version}".source =
       xivlauncherWine;
   };
 }
