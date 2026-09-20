@@ -41,5 +41,6 @@ in
     telegram-desktop
     turnOffScreens
     turnOffScreensDesktop
+    upscayl
   ];
 }
