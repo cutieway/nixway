@@ -1,6 +1,22 @@
 { pkgs, pkgs-unstable, config, ... }:
 
 let
+  # Steam injects gameoverlayrenderer.so through LD_PRELOAD when the overlay is
+  # enabled for the XIVLauncher shortcut. That object links against libGL.so.1,
+  # but nixos-26.05's /run/opengl-driver/lib only ships Mesa's vendor libraries
+  # (libGLX_mesa, libEGL_mesa) and not the libglvnd dispatchers (libGL.so.1,
+  # libEGL.so.1, libGLX.so.0). With no libGL on the loader path the dynamic
+  # linker aborts every process that receives the preload, including the Wine
+  # build that starts the Dalamud injector, which surfaces as a bare
+  # "internal Dalamud error". Expose libglvnd (and Mesa for the vendor
+  # libraries) to the whole launcher process tree.
+  glLibs = pkgs.lib.makeLibraryPath [
+    pkgs.libglvnd
+    pkgs.mesa
+    pkgs.pkgsi686Linux.libglvnd
+    pkgs.pkgsi686Linux.mesa
+  ];
+
   # XIVLauncher with the Steam virtual-controller workaround applied.
   xivlauncher = pkgs.symlinkJoin {
     name = "xivlauncher-wrapped";
@@ -9,7 +25,8 @@ let
 
     postBuild = ''
       wrapProgram "$out/bin/XIVLauncher.Core" \
-        --set SteamVirtualGamepadInfo ""
+        --set SteamVirtualGamepadInfo "" \
+        --prefix LD_LIBRARY_PATH : "${glLibs}"
     '';
   };
 
