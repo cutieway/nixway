@@ -280,11 +280,17 @@ The Razer Raiju Tournament Edition (`1532:1007`) uses Steam's PS4 HIDAPI path.
 Keep its physical switch in PS4 mode, enable PlayStation support in Steam, and
 enable Steam Input for the relevant game or XIVLauncher shortcut.
 
-XIVLauncher is wrapped with an empty `SteamVirtualGamepadInfo` value to avoid an
-older Wine/SDL controller blacklist. Wine staging is taken from the
-`nixpkgs-unstable` channel, since `nixos-26.05` still pins an older build, and
-exposed at `~/.xlcore/compatibilitytool/Wine-Staging-11.16`; select its `bin`
-directory as XIVLauncher's custom Wine binary directory.
+The XIVLauncher wrapper sets an empty `SteamVirtualGamepadInfo` (Wine/SDL
+controller blacklist) and prepends libglvnd/Mesa to `LD_LIBRARY_PATH`. Steam
+preloads `gameoverlayrenderer.so` into its children and it needs `libGL.so.1`,
+which `/run/opengl-driver/lib` lacks; without this, launches die instantly with
+a bare "internal Dalamud error". Wine staging follows `nixpkgs-unstable`
+(`nixos-26.05` pins an older build) and lands at
+`~/.xlcore/compatibilitytool/Wine-Staging-11.16`; point XIVLauncher's custom
+Wine path at its `bin` directory. `update-system` bumps it. ReShade needs the
+real HLSL compiler, so that wrapper also appends `d3dcompiler_47=n,b` to
+`WINEDLLOVERRIDES`; XIVLauncher overwrites that variable itself, so the
+launcher's own `AdditionalArgs` cannot set it.
 
 Use this Steam launch option when a game should use GameMode:
 

@@ -33,7 +33,12 @@ let
   # Wine staging from the unstable channel: nixos-26.05 still pins 11.8.
   wine = pkgs-unstable.wineWow64Packages.staging;
 
-  # XIVLauncher's Wine build with fsync and esync disabled so Wine uses NTsync.
+  # XIVLauncher's Wine build with fsync and esync disabled so Wine uses NTsync,
+  # and with the native d3dcompiler_47 forced. Wine's built-in d3dcompiler_47 is
+  # a vkd3d front-end that cannot compile several ReShade shaders (it rejects the
+  # [fastopt] loop attribute and caps unrolling at 1024 iterations). XIVLauncher
+  # overwrites WINEDLLOVERRIDES with its own value, so the override has to be
+  # appended here, after XIVLauncher has set up the environment.
   xivlauncherWine = pkgs.symlinkJoin {
     name = "wine-staging-${wine.version}-xivlauncher";
     paths = [ wine ];
@@ -45,7 +50,8 @@ let
       for bin in "$out"/bin/wine*; do
         wrapProgram "$bin" \
           --set WINEFSYNC "0" \
-          --set WINEESYNC "0"
+          --set WINEESYNC "0" \
+          --suffix WINEDLLOVERRIDES ";" "d3dcompiler_47=n,b"
       done
     '';
   };
