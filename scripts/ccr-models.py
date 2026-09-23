@@ -15,10 +15,13 @@ Data sources
 What it writes
 --------------
 Only ``~/.claude-code-router/config.sqlite`` (table ``app_config``, key
-``default``): the OpenCode Zen provider's model list and the single Codex
-profile.  CCR regenerates ``gateway.config.json`` and the Codex model catalogue
-from that on the next start, so CCR is stopped first when applying.  Every
-other CCR profile (the old Claude Code ones) is removed.
+``default``) is written: the OpenCode Zen provider's model list and per-model
+metadata, plus the single Codex profile.  The metadata matters because CCR
+builds Codex's ``supported_reasoning_levels`` from
+``Providers[].modelMetadata``; without it Codex has no reasoning picker.  CCR
+regenerates ``gateway.config.json`` and the Codex model catalogue from that on
+the next start, so CCR is stopped first when applying.  Every other CCR
+profile (the old Claude Code ones) is removed.
 
 The command is a no-op when nothing changed.  Use ``--dry-run`` to preview.
 """
@@ -96,6 +99,58 @@ def select_free_models(models_dev: dict, zen_ids: set[str]) -> list[tuple[str, i
         selected.append((model_id, int(context)))
     selected.sort()
     return selected
+
+
+# CCR keeps only these effort names when building Codex's reasoning picker.
+REASONING_EFFORTS = ("low", "medium", "high", "xhigh", "max", "ultra")
+DEFAULT_EFFORTS = ("low", "medium", "high")
+
+
+def reasoning_description(effort: str) -> str:
+    if effort == "xhigh":
+        return "Extra high"
+    if effort == "ultra":
+        return "Maximum"
+    return effort.capitalize()
+
+
+def model_metadata(models_dev: dict, model_id: str) -> dict | None:
+    """Per-model CCR metadata, mainly the Codex reasoning picker options.
+
+    Uses models.dev's explicit effort values when it declares them.  Models
+    that only advertise ``reasoning: true`` (no effort list) still get the
+    low/medium/high picker CCR has always shown for them; CCR's gateway
+    normalises the chosen effort anyway.
+    """
+    models = (models_dev.get(MODELS_DEV_PROVIDER) or {}).get("models") or {}
+    meta = models.get(model_id) or {}
+    efforts: list[str] = []
+    for option in meta.get("reasoning_options") or []:
+        if not isinstance(option, dict):
+            continue
+        if str(option.get("type", "")).lower() != "effort":
+            continue
+        for value in option.get("values") or []:
+            effort = str(value).lower()
+            if effort in REASONING_EFFORTS and effort not in efforts:
+                efforts.append(effort)
+    if not efforts and meta.get("reasoning"):
+        efforts = list(DEFAULT_EFFORTS)
+    if not efforts:
+        return None
+
+    entry: dict = {
+        "supportedReasoningLevels": [
+            {"description": reasoning_description(effort), "effort": effort}
+            for effort in efforts
+        ],
+        "defaultReasoningLevel": "medium" if "medium" in efforts else efforts[0],
+        "supportsReasoningSummaries": bool(meta.get("reasoning")),
+    }
+    context = (meta.get("limit") or {}).get("context")
+    if context:
+        entry["contextWindow"] = entry["maxContextWindow"] = int(context)
+    return entry
 
 
 def choose_default(free: list[tuple[str, int]], current_id: str) -> str:
@@ -180,12 +235,22 @@ def main(argv: list[str]) -> int:
     default_id = choose_default(free, bare_model_id(current_model))
     default_model = f"{CCR_PROVIDER_NAME}/{default_id}"
 
+    metadata = {}
+    for model_id, _ in free:
+        entry = model_metadata(models_dev, model_id)
+        if entry:
+            metadata[model_id] = entry
+    old_metadata = provider.get("modelMetadata") or {}
+
     print(f"models.dev: {MODELS_DEV_URL}")
     print(f"availability: {ZEN_MODELS_URL}")
     print(f"free & served ({len(new_models)}):")
     for model_id, context in free:
         marker = " *" if model_id == default_id else ""
-        print(f"  {model_id:<34} ctx={context:>8}{marker}")
+        entry = metadata.get(model_id) or {}
+        levels = [l["effort"] for l in entry.get("supportedReasoningLevels") or []]
+        shown = ",".join(levels) if levels else "-"
+        print(f"  {model_id:<34} ctx={context:>8} reasoning={shown}{marker}")
     print()
     print(f"provider models: {len(old_models)} -> {len(new_models)}")
     print(f"codex default: {current_model or '(unset)'} -> {default_model}")
@@ -196,6 +261,7 @@ def main(argv: list[str]) -> int:
 
     unchanged = (
         old_models == new_models
+        and old_metadata == metadata
         and not removed
         and not stray_claude_dirs
         and codex is not None
@@ -220,6 +286,7 @@ def main(argv: list[str]) -> int:
     backup.close()
 
     provider["models"] = new_models
+    provider["modelMetadata"] = metadata
     if codex is None:
         codex = {
             "agent": CODEX_AGENT,

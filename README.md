@@ -415,6 +415,17 @@ still lists it. Withdrawn models such as `deepseek-v4-flash-free` disappear on
 their own, and new free models appear on the next run. `ccr-models --dry-run`
 prints the list and the exact changes without writing anything.
 
+`ccr-models` also writes each model's `modelMetadata`, because that is where
+CCR reads the Codex reasoning picker from. CCR builds
+`supported_reasoning_levels` in `ccr-model-catalog.json` out of
+`Providers[].modelMetadata[model].supportedReasoningLevels`; with an empty
+map, Codex's `/model` screen shows no reasoning choices at all. Levels come
+from models.dev's explicit effort values when it declares them (muse-spark:
+low/medium/high/xhigh); models that only advertise `reasoning: true` get the
+low/medium/high picker CCR has always shown for them. CCR regenerates the
+catalogue from this on the next `ccr start`, so restart Codex after a
+refresh.
+
 Applying it rewrites only `~/.claude-code-router/config.sqlite` (after a
 backup), stopping CCR first and deleting the old Claude Code profiles. CCR
 regenerates `gateway.config.json` and the Codex catalogue from that on the
