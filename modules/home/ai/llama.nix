@@ -160,22 +160,8 @@ EOF
       }
 
       default_config() {
-        local backend="$1"
         local model_q
         printf -v model_q '%q' "$model_path"
-
-        # PrismML's Bonsai models carry their own official defaults (full GPU
-        # offload, 32K context, thinking-mode sampling). Standard llama.cpp
-        # models keep the generic values below.
-        local ngl="auto"
-        local ctx_size="''${LLM_CTX_SIZE:-65536}"
-        local temp="0.6"
-        if [ "$backend" = "prism" ]; then
-          ngl="99"
-          ctx_size="''${LLM_CTX_SIZE:-32768}"
-          temp="1.0"
-        fi
-
         cat <<EOF
 llama-server \\
   # -----------------------------------------------------------------
@@ -187,7 +173,7 @@ llama-server \\
   # -----------------------------------------------------------------
   # 2. HARDWARE ACCELERATION & GPU OFFLOAD
   # -----------------------------------------------------------------
-  -ngl $ngl \\
+  -ngl auto \\
   --flash-attn on \\
   --threads -1 \\
   --mmap \\
@@ -196,7 +182,7 @@ llama-server \\
   # -----------------------------------------------------------------
   # 3. CONTEXT, BATCHING & KV CACHE
   # -----------------------------------------------------------------
-  --ctx-size $ctx_size \\
+  --ctx-size ''${LLM_CTX_SIZE:-65536} \\
   --batch-size 2048 \\
   --ubatch-size 1024 \\
   --cache-type-k ''${LLM_CACHE_TYPE_K:-q8_0} \\
@@ -210,7 +196,7 @@ llama-server \\
   # -----------------------------------------------------------------
   # 5. SAMPLING & GENERATION DEFAULTS
   # -----------------------------------------------------------------
-  --temp $temp \\
+  --temp 0.6 \\
   --top-k 20 \\
   --top-p 0.95 \\
   --min-p 0.0 \\
@@ -236,7 +222,7 @@ EOF
         echo "Environment variables:"
         echo "  LLM_MODELS_DIR    model storage root (default: ~/.lmstudio/models)"
         echo "  LLM_MODEL_ALIAS   model ID used when creating a config (default: local)"
-        echo "  LLM_CTX_SIZE      context used when creating a config (default: 65536; prism: 32768)"
+        echo "  LLM_CTX_SIZE      context used when creating a config (default: 65536)"
         echo "  LLM_CACHE_TYPE_K  key cache used when creating a config (default: q8_0)"
         echo "  LLM_CACHE_TYPE_V  value cache used when creating a config (default: q8_0)"
         echo "  LLM_FIT_TARGET    VRAM reserve used when creating a config (default: 2048)"
@@ -328,10 +314,8 @@ EOF
         exit 1
       fi
 
-      backend="standard"
       case "''${LLM_BACKEND:-auto}" in
         prism)
-          backend="prism"
           server="${llamaCppPrism}/bin/llama-server"
           ;;
         standard)
@@ -339,7 +323,7 @@ EOF
           ;;
         auto)
           case "$model_path" in
-            */prism-ml/*) backend="prism"; server="${llamaCppPrism}/bin/llama-server" ;;
+            */prism-ml/*) server="${llamaCppPrism}/bin/llama-server" ;;
             *)            server="${llamaCpp}/bin/llama-server" ;;
           esac
           ;;
@@ -352,7 +336,7 @@ EOF
 
       config_path="$model_path.llm.conf"
       if [ ! -e "$config_path" ]; then
-        default_config "$backend" > "$config_path"
+        default_config > "$config_path"
         echo "Created config: $config_path" >&2
       elif [ ! -f "$config_path" ]; then
         echo "Error: model config is not a regular file: $config_path" >&2
@@ -361,7 +345,7 @@ EOF
 
       config_text="$(< "$config_path")"
       if [ -z "''${config_text//[[:space:]]/}" ]; then
-        default_config "$backend" > "$config_path"
+        default_config > "$config_path"
         config_text="$(< "$config_path")"
         echo "Initialized empty config: $config_path" >&2
       fi
@@ -388,10 +372,7 @@ EOF
       # only known-safe tuning flags survive the filter.
       filtered_args=()
       if [ "''${#config_args[@]}" -gt 0 ]; then
-        raw_filtered="$(filter_config_args "''${config_args[@]}")"
-        if [ -n "$raw_filtered" ]; then
-          mapfile -d "" -t filtered_args < <(printf '%s' "$raw_filtered")
-        fi
+        mapfile -d "" -t filtered_args < <(filter_config_args "''${config_args[@]}")
       fi
 
       if [ "''${#filtered_args[@]}" -gt 0 ] && [ "''${filtered_args[0]}" = llama-server ]; then
