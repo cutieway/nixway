@@ -374,95 +374,43 @@ rustup default stable
 rustup update stable
 ```
 
-AI agent packages in the work profile come from the shared, pinned
+AI agent packages in the work profile: the Hermes Agent and the OpenCode CLI
+come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
-CCR (ccr) is self-packaged at `packages/claude-code-router.nix` (v3.0.7) to
-fix gateway bugs present in the llm-agents pin. Hermes Agent, OpenClaw, both
-OpenCode channels, and the Codex profile served by CCR are selected:
+CCR and pi-coding-agent are packaged locally under `packages/` because that
+input's versions were too old, and OpenChamber is packaged locally because the
+input does not carry it at all. Selected:
 
 ```bash
-ccr codex
 hermes setup
 hermes
-openclaw
 opencode
-opencode2
+openchamber
 ```
 
-### Codex through CCR
+The `opencode` CLI defaults to OpenCode Zen's free tier (`opencode/big-pickle`,
+set in `~/.config/opencode/opencode.jsonc`). That free tier is gated to
+requests made from inside OpenCode itself: any external client gets
+`403 FreeTierError: OpenCode's free tier can only be used from within
+OpenCode`, with or without an API key. The free models are therefore used
+through `opencode` directly, not through a proxy or router.
 
-`ccr codex` is a thin alias for CCR's single `default-codex` profile. The
-profile routes Codex through CCR's gateway (`http://127.0.0.1:3456/v1`) to
-OpenCode Zen, and its model catalogue lists every model that is free at the
-moment, so Codex can switch between them without a profile per model.
-Claude Code is deliberately not part of this: its Anthropic translation layer
-needs one profile per model, cannot vary its auto-compaction window at
-runtime, and hides the gateway's real context size.
+A different *front-end* that still runs the OpenCode engine is unaffected by
+that gate, because the request still originates inside OpenCode.
+[OpenChamber](https://github.com/openchamber/openchamber) (MIT) is one: a
+desktop / web-PWA / VS Code / iOS-Android / CLI-server workspace that drives
+the OpenCode CLI or server to run the agent, so Zen's free models should work
+through it the same way they work in `opencode` itself. It is a UI around
+OpenCode, not an alternative API client. It is packaged at
+`packages/openchamber/default.nix` — the published `@openchamber/web` tarball
+plus a vendored `package-lock.json`, since upstream builds with bun and ships
+none — and selected in the AI bundle; run `openchamber` while an OpenCode
+server is reachable.
 
-The free list is discovered, not written by hand. `ccr-models`
-(`scripts/ccr-models.py`) reads two sources:
-
-- `https://models.dev/api.json` — the catalogue OpenCode itself uses. It is
-  read directly rather than through `~/.cache/opencode/models.json`, which is
-  only a local cache of it.
-- `https://opencode.ai/zen/v1/models` — what the Zen endpoint currently
-  serves. Availability is decided here, because models.dev's `status` field
-  lags: `mimo-v2.5-free` is marked deprecated yet still works, while other
-  deprecated models have been withdrawn entirely.
-
-A model is selected when models.dev prices it at zero and the live endpoint
-still lists it. Withdrawn models such as `deepseek-v4-flash-free` disappear on
-their own, and new free models appear on the next run. `ccr-models --dry-run`
-prints the list and the exact changes without writing anything.
-
-`ccr-models` also writes each model's `modelMetadata`, because that is where
-CCR reads the Codex reasoning picker from. CCR builds
-`supported_reasoning_levels` in `ccr-model-catalog.json` out of
-`Providers[].modelMetadata[model].supportedReasoningLevels`; with an empty
-map, Codex's `/model` screen shows no reasoning choices at all. Levels come
-from models.dev's explicit effort values when it declares them (muse-spark:
-low/medium/high/xhigh); models that only advertise `reasoning: true` get the
-low/medium/high picker CCR has always shown for them. CCR regenerates the
-catalogue from this on the next `ccr start`, so restart Codex after a
-refresh.
-
-Applying it rewrites only `~/.claude-code-router/config.sqlite` (after a
-backup), stopping CCR first and deleting the old Claude Code profiles. CCR
-regenerates `gateway.config.json` and the Codex catalogue from that on the
-next `ccr codex`. `update-ai` and `update-system` run it after they rebuild,
-so the list tracks OpenCode without touching the CCR UI; it can also be run by
-hand.
-
-The bundled `@the-next-ai/ai-gateway` normalises reasoning effort through its
-built-in `Qt` function before forwarding to the provider:
-
-| Codex sends | Qt normalises to | Sent to OpenCode Zen     |
-|-------------|------------------|--------------------------|
-| `low`       | `high`           | `reasoning_effort: high` |
-| `medium`    | `high`           | `reasoning_effort: high` |
-| `high`      | `high`           | `reasoning_effort: high` |
-| `xhigh`     | `max`            | `reasoning_effort: max`  |
-| `max`       | `max`            | `reasoning_effort: max`  |
-
-This is a one-to-one normalisation, not a configurable mapping. Models that do
-not support the resulting effort level (e.g. those with no reasoning or only
-`none`/`high`) receive the value silently; those that support it use the
-advertised level. The plain `Qt` source (recovered from the minified bundle):
-
-```javascript
-function Qt(e) {
-  let n = e.trim().toLowerCase().replace(/[-_\s]+/g, "");
-  if (n === "max" || n === "xhigh") return "max";
-  if (n === "high" || n === "medium" || n === "low") return "high";
-}
-```
-
-For DeepSeek models the same adapter also preserves existing
-`reasoning_content` and adds an empty value only when a replayed assistant
-tool call lacks the field; DeepSeek requires that field in thinking mode.
-CCR's shared Anthropic-to-OpenAI adapter places tool results before any user
-text carried in the same message, as required by OpenAI chat ordering. Both
-details matter when Codex compacts a conversation containing tools.
+CCR (`ccr`) stays installed from `packages/claude-code-router.nix` (v3.0.7)
+but is deliberately left unconfigured and is not wired to OpenCode Zen. It is
+kept for a future provider; run `ccr ui` once one whose API accepts external
+clients is available.
 
 Add future agents beside Hermes in `modules/home/ai/agents.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
@@ -569,7 +517,7 @@ write its `flake.lock`, never the immutable source snapshot of the active
 generation.
 
 Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update the
-`llm-agents.nix` shared input and rebuild all selected agent packages together,
+`llm-agents.nix` input (the Hermes Agent and the OpenCode CLI) and rebuild,
 `update-pi` to pull the latest pi-coding-agent tag and rebuild it, or
 `update-mudfish VERSION` to stage and review a Mudfish release. Ordinary rebuilds
 leave `flake.lock` unchanged.

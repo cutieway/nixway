@@ -8,10 +8,10 @@
   nodejs,
 }:
 
-# Self-contained package: not an override of the llm-agents derivation.
-# We copy the structure of the llm-agents claude-code-router expression
-# but pin a newer version (3.0.7) that fixes stream-disconnect and
-# OpenCode-Zen-400 crashes.  See:
+# Self-contained package: not an override of the llm-agents derivation.  The
+# llm-agents claude-code-router was too old when this was added, so the
+# expression structure is copied here and pinned to 3.0.7, which fixes
+# stream-disconnect and OpenCode-Zen-400 crashes.  See:
 #   https://github.com/musistudio/claude-code-router
 
 let
