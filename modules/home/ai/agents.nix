@@ -8,77 +8,40 @@ let
   # stream-disconnect and OpenCode-Zen-400 bugs.)
   claudeCodeRouter = pkgs.callPackage ../../../packages/claude-code-router.nix { };
 
-  # Ensure correct reasoning levels per model profile.
-  # CCR's bundled gateway normalises effort via its Qt function:
-  #   low/medium/high → "high"
-  #   xhigh/max       → "max"
-  # DeepSeek profiles use "xhigh" to get "max" reasoning, all others use "high".
-  ccrSetReasoning = pkgs.writeShellApplication {
-    name = "ccr-set-reasoning";
-    text = ''
-      # shellcheck shell=bash
-      set -euo pipefail
-
-      CCR_PROFILES="$HOME/.claude-code-router/profiles"
-
-      updated=0
-      for entry in "default-claude-code:xhigh" "claude-deepseek:xhigh" "claude-nemotron:high" "claude-north:high" "claude-mimo:high" "claude-big-pickle:high" "claude-laguna:high" "claude-ling:high"; do
-        dir="''${entry%%:*}"
-        want="''${entry##*:}"
-        settings="$CCR_PROFILES/$dir/claude/settings.json"
-        if [ -f "$settings" ]; then
-          current=$(jq -r '.effortLevel // empty' "$settings" 2>/dev/null || true)
-          if [ "$current" != "$want" ]; then
-            jq --arg e "$want" '.effortLevel = $e' "$settings" > "$settings.tmp" \
-              && mv "$settings.tmp" "$settings"
-            echo "fixed: $dir  $current → $want"
-            ((updated++))
-          fi
-        else
-          echo "warning: $dir settings not found -- run 'ccr $dir setup' first"
-        fi
-      done
-
-      if [ "$updated" -eq 0 ]; then
-        echo "All profiles have correct effortLevel values."
-      else
-        echo "Updated $updated profile(s)."
-      fi
-    '';
-  };
-
+  # `ccr codex` is the only CCR surface kept. Claude Code needed one CCR
+  # profile per model (its Anthropic translation layer cannot vary the context
+  # window at runtime), which was brittle and is gone. Codex needs a single
+  # profile: its model catalogue carries every model, so it switches itself.
   claudeCodeRouterCli = pkgs.writeShellApplication {
     name = "ccr";
     text = ''
-      if [ "$#" -ge 1 ] && [ "$1" = "claude" ]; then
-        case "''${2-}" in
-          "" | -h | --help)
-            printf '%s\n' \
-              'Usage: ccr claude-<profile> [cli|app] [-- <claude arguments>]' \
-              'Available Claude Code profiles:' \
-              '  ccr claude-deepseek    OpenCode Zen/deepseek-v4-flash-free    (200k context)' \
-              '  ccr claude-nemotron    OpenCode Zen/nemotron-3-ultra-free     (1m context)' \
-              '  ccr claude-north       OpenCode Zen/north-mini-code-free      (256k context)' \
-              '  ccr claude-mimo        OpenCode Zen/mimo-v2.5-free            (200k context)' \
-              '  ccr claude-big-pickle  OpenCode Zen/big-pickle                (200k context)' \
-              '  ccr claude-laguna      OpenCode Zen/laguna-s-2.1-free         (128k context)' \
-              '  ccr claude-ling        OpenCode Zen/ling-3.0-flash-free       (128k context)' \
-              "" \
-              'Choose a profile explicitly; ccr claude does not launch a model.'
-            exit 0
+      if [ "$#" -ge 1 ]; then
+        case "$1" in
+          codex | Codex | CODEX)
+            shift
+            exec ${claudeCodeRouter}/bin/ccr default-codex "$@"
             ;;
         esac
       fi
-
       exec ${claudeCodeRouter}/bin/ccr "$@"
+    '';
+  };
+
+  # Discover the OpenCode Zen models that are free right now and write them
+  # into CCR's Codex profile. `update-ai` and `update-system` run this after
+  # rebuilding, so the list tracks OpenCode without hand-editing CCR.
+  ccrModels = pkgs.writeShellApplication {
+    name = "ccr-models";
+    runtimeInputs = [ pkgs.python3 claudeCodeRouterCli ];
+    text = ''
+      exec python3 ${../../../scripts/ccr-models.py} "$@"
     '';
   };
 in
 {
   home.packages = [
-    llmAgents.claude-code
     claudeCodeRouterCli
-    ccrSetReasoning
+    ccrModels
     llmAgents.hermes-agent
     llmAgents.opencode
     (pkgs.callPackage ../../../packages/pi.nix {

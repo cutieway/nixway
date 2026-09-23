@@ -377,12 +377,11 @@ rustup update stable
 AI agent packages in the work profile come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
 CCR (ccr) is self-packaged at `packages/claude-code-router.nix` (v3.0.7) to
-fix gateway bugs present in the llm-agents pin. Claude Code, Claude Code
-Router, Hermes Agent, OpenClaw, and both OpenCode channels are selected:
+fix gateway bugs present in the llm-agents pin. Hermes Agent, OpenClaw, both
+OpenCode channels, and the Codex profile served by CCR are selected:
 
 ```bash
-claude
-ccr
+ccr codex
 hermes setup
 hermes
 openclaw
@@ -390,17 +389,49 @@ opencode
 opencode2
 ```
 
-CCR's OpenCode Zen provider normalizes reasoning only for its configured free
-models. The bundled `@the-next-ai/ai-gateway` normalises reasoning effort
-through its built-in `Qt` function before forwarding to the provider:
+### Codex through CCR
 
-| Claude/Codex sends | Qt normalises to | Sent to OpenCode Zen    |
-|--------------------|------------------|-------------------------|
-| `low`              | `high`           | `reasoning_effort: high` |
-| `medium`           | `high`           | `reasoning_effort: high` |
-| `high`             | `high`           | `reasoning_effort: high` |
-| `xhigh`            | `max`            | `reasoning_effort: max`  |
-| `max`              | `max`            | `reasoning_effort: max`  |
+`ccr codex` is a thin alias for CCR's single `default-codex` profile. The
+profile routes Codex through CCR's gateway (`http://127.0.0.1:3456/v1`) to
+OpenCode Zen, and its model catalogue lists every model that is free at the
+moment, so Codex can switch between them without a profile per model.
+Claude Code is deliberately not part of this: its Anthropic translation layer
+needs one profile per model, cannot vary its auto-compaction window at
+runtime, and hides the gateway's real context size.
+
+The free list is discovered, not written by hand. `ccr-models`
+(`scripts/ccr-models.py`) reads two sources:
+
+- `https://models.dev/api.json` — the catalogue OpenCode itself uses. It is
+  read directly rather than through `~/.cache/opencode/models.json`, which is
+  only a local cache of it.
+- `https://opencode.ai/zen/v1/models` — what the Zen endpoint currently
+  serves. Availability is decided here, because models.dev's `status` field
+  lags: `mimo-v2.5-free` is marked deprecated yet still works, while other
+  deprecated models have been withdrawn entirely.
+
+A model is selected when models.dev prices it at zero and the live endpoint
+still lists it. Withdrawn models such as `deepseek-v4-flash-free` disappear on
+their own, and new free models appear on the next run. `ccr-models --dry-run`
+prints the list and the exact changes without writing anything.
+
+Applying it rewrites only `~/.claude-code-router/config.sqlite` (after a
+backup), stopping CCR first and deleting the old Claude Code profiles. CCR
+regenerates `gateway.config.json` and the Codex catalogue from that on the
+next `ccr codex`. `update-ai` and `update-system` run it after they rebuild,
+so the list tracks OpenCode without touching the CCR UI; it can also be run by
+hand.
+
+The bundled `@the-next-ai/ai-gateway` normalises reasoning effort through its
+built-in `Qt` function before forwarding to the provider:
+
+| Codex sends | Qt normalises to | Sent to OpenCode Zen     |
+|-------------|------------------|--------------------------|
+| `low`       | `high`           | `reasoning_effort: high` |
+| `medium`    | `high`           | `reasoning_effort: high` |
+| `high`      | `high`           | `reasoning_effort: high` |
+| `xhigh`     | `max`            | `reasoning_effort: max`  |
+| `max`       | `max`            | `reasoning_effort: max`  |
 
 This is a one-to-one normalisation, not a configurable mapping. Models that do
 not support the resulting effort level (e.g. those with no reasoning or only
@@ -415,42 +446,14 @@ function Qt(e) {
 }
 ```
 
-Claude profiles are set so that non-DeepSeek models send `"high"` (Qt returns
-`"high"`) and DeepSeek profiles send `"xhigh"` (Qt returns `"max"`). Run
-`ccr-set-reasoning` to verify and correct effort levels in all profiles.
-For DeepSeek V4 Flash, the same adapter also preserves existing
+For DeepSeek models the same adapter also preserves existing
 `reasoning_content` and adds an empty value only when a replayed assistant
 tool call lacks the field; DeepSeek requires that field in thinking mode.
 CCR's shared Anthropic-to-OpenAI adapter places tool results before any user
-text carried in the same Anthropic message, as required by OpenAI chat
-ordering. Both details matter when Claude Code compacts a conversation
-containing tools.
+text carried in the same message, as required by OpenAI chat ordering. Both
+details matter when Codex compacts a conversation containing tools.
 
-Claude Code cannot change its process-wide auto-compaction window when `/model`
-switches between custom gateway models. Use the matching CCR profile instead:
-
-```bash
-ccr claude-deepseek
-ccr claude-nemotron
-ccr claude-north
-ccr claude-mimo
-ccr claude-big-pickle
-ccr claude-laguna
-ccr claude-ling
-```
-
-Run `ccr claude` or `ccr claude --help` to print this profile list without
-launching a model.
-
-Each profile sets both context controls to the model capacity while leaving
-`/effort` available: `CLAUDE_CODE_MAX_CONTEXT_TOKENS` declares the custom
-gateway model's total context, and `CLAUDE_CODE_AUTO_COMPACT_WINDOW` enables
-Claude's normal autocompact reserve at that limit. The latter cannot declare
-capacity by itself because Claude caps it to the model limit it already knows.
-Start a new profile session instead of changing to a model with a different
-context size inside an existing Claude session.
-
-Add future agents beside Hermes in `modules/home/work/default.nix`; they use
+Add future agents beside Hermes in `modules/home/ai/agents.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
 tool. Use `update-ai` to advance that shared input and rebuild all selected
 agent packages together. AI tools remain separate from routine system updates
