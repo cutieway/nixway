@@ -379,14 +379,25 @@ come from the shared, pinned
 [`numtide/llm-agents.nix`](https://github.com/numtide/llm-agents.nix) input.
 CCR and pi-coding-agent are packaged locally under `packages/` because that
 input's versions were too old, and OpenChamber is packaged locally because the
-input does not carry it at all. Selected:
+input does not carry it at all. oh-my-pi (`omp`) is a separate coding agent
+pulled from its own `can1357/oh-my-pi` input and installed through the Home
+Manager module that input ships (`programs.omp.enable`). Selected:
 
 ```bash
 hermes setup
 hermes
 opencode
 openchamber
+omp setup
+omp
 ```
+
+omp keeps its configuration under `~/.omp/agent/`; run `omp setup` once to
+choose a provider and default model. To point it at the local llama.cpp
+server, declare a provider in `~/.omp/agent/models.yml`
+(`baseUrl: http://127.0.0.1:8080/v1`, `api: openai-completions`, a `dummy`
+key, and a model whose `id` is `local` — the `llm` wrapper's `--alias`), then
+select it with `/model`.
 
 The `opencode` CLI defaults to OpenCode Zen's free tier (`opencode/big-pickle`,
 set in `~/.config/opencode/opencode.jsonc`). That free tier is gated to
@@ -522,10 +533,10 @@ generation.
 
 Use `update-kernel` for only the CachyOS kernel input, `update-ai` to refresh
 only the llama.cpp PrismML build, `update-agents` to update pi, Hermes,
-OpenCode, and OpenChamber, or `update-mudfish VERSION` to stage and review a
-Mudfish release. `update-system` is the umbrella that updates every input plus
-the locally packaged AI pins above. Ordinary rebuilds leave `flake.lock`
-unchanged.
+OpenCode, OpenChamber, and oh-my-pi (`omp`), or `update-mudfish VERSION` to
+stage and review a Mudfish release. `update-system` is the umbrella that
+updates every input plus the locally packaged AI pins above. Ordinary rebuilds
+leave `flake.lock` unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through

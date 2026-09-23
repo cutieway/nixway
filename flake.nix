@@ -10,6 +10,11 @@
 
     llm-agents.url = "github:numtide/llm-agents.nix";
 
+    # oh-my-pi (omp) is a separate coding agent that ships its own Home
+    # Manager module. Its flake.lock is left unfollowed so upstream's tested
+    # nixpkgs pin is used, the same way llm-agents is handled.
+    omp.url = "github:can1357/oh-my-pi";
+
     # pi-coding-agent: flake = false because the repo has no flake.nix.
     # Using it as a plain source means `nix flake update pi` pulls the latest
     # tag and the package version is derived from its package.json.

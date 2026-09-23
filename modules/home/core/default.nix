@@ -140,13 +140,13 @@ in
       readonly -f _refresh_ai_pins
 
       _update_agents() {
-        nix flake update --accept-flake-config llm-agents pi &&
+        nix flake update --accept-flake-config llm-agents pi omp &&
           _refresh_agent_pins
       }
       readonly -f _update_agents
 
       _update_system() {
-        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents pi &&
+        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents pi omp &&
           _refresh_agent_pins &&
           _refresh_ai_pins
       }

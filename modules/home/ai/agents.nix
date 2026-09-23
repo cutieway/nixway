@@ -37,4 +37,8 @@ in
       pi-src = inputs.pi;
     })
   ];
+
+  # oh-my-pi (omp) is installed and kept current by its own Home Manager
+  # module; settings are left to `omp setup` so onboarding stays writable.
+  programs.omp.enable = true;
 }
