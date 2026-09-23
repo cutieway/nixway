@@ -17,11 +17,11 @@
 # `--version-regex 'prism-(.*)'`.
 stdenvNoCC.mkDerivation (finalAttrs: {
   pname = "llama-cpp-prism";
-  version = "b9596-9fcaed7";
+  version = "b10709-9a9394a";
 
   src = fetchzip {
     url = "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-${finalAttrs.version}/llama-prism-${finalAttrs.version}-bin-ubuntu-rocm-7.2-x64.tar.gz";
-    hash = "sha256-UJA2c4QF9Xlqnr292h3gOnzXJJRPr7K0cuPQUB4tsfU=";
+    hash = "sha256-Ht+IB+12JAc8u9qNAfifK/8gTtzfYn+AQH1U8z4ZRew=";
   };
 
   nativeBuildInputs = [ autoPatchelfHook ];
@@ -35,7 +35,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   installPhase = ''
     mkdir -p $out/bin
-    for f in llama-* rpc-server; do
+    for f in llama-* ggml-rpc-server; do
       test -f "$f" -a -x "$f" && cp -a "$f" $out/bin/
     done
     for f in lib*.so*; do
