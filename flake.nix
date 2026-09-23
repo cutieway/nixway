@@ -28,11 +28,24 @@
     inputs@{ self, ... }:
     let
       mkHost = import ./lib/mk-host.nix { inherit inputs self; };
+      system = "x86_64-linux";
+      pkgs = inputs.nixpkgs.legacyPackages.${system};
     in
     {
       nixosConfigurations.uwu = mkHost {
         hostname = "uwu";
         username = "lexi";
+      };
+
+      # Locally packaged AI tools, exposed so `nix build .#pi` and friends
+      # work and so the update-agents/update-ai shell commands can call
+      # `nix-update --flake` without hand-editing versions or hashes.
+      # `nix flake check` only evaluates these; it does not build them.
+      packages.${system} = {
+        claude-code-router = pkgs.callPackage ./packages/claude-code-router.nix { };
+        llama-cpp-prism = pkgs.callPackage ./packages/llama-cpp-prism.nix { };
+        openchamber = pkgs.callPackage ./packages/openchamber { };
+        pi = pkgs.callPackage ./packages/pi.nix { pi-src = inputs.pi; };
       };
     };
 }

@@ -17,7 +17,7 @@ buildNpmPackage (finalAttrs: {
 
   src = pi-src;
 
-  npmDepsHash = "sha256-ovqlgsWgSxbyuKqjWxMt/mEOAyN/nQMAiXXOrhZmjhM=";
+  npmDepsHash = "sha256-JBIYoP2vvRNz1HONNvDJ1U3c+nmCJ7/VgNthRTkrkIA=";
 
   npmWorkspace = "packages/coding-agent";
 
@@ -32,7 +32,7 @@ buildNpmPackage (finalAttrs: {
   # models script that requires network access at build time).
   modelData = fetchurl {
     url = "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-${finalAttrs.version}.tgz";
-    hash = "sha256-r30RmGF5RFzm/oizfVfeIvgjwP/TplyuMcVVt/XpklM=";
+    hash = "sha256-NbRDLyfMJmX4a+67mvajmxJRlwiDwwRL2L5PToxzHKA=";
   };
 
   preBuild = ''

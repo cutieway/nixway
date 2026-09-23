@@ -75,6 +75,7 @@ in
     context7-mcp
     mcp-nixos
     mudfishUpdater
+    nix-update
     nixwaySwitch
     sevenZipArkCompat
     tree
@@ -96,11 +97,14 @@ in
       ll = "eza -la --group-directories-first";
       test-rebuild = "nh os test --accept-flake-config --show-activation-logs";
       update-ai = "update_ai";
+      update-agents = "update_agents";
       update-kernel = "update_kernel";
       update-system = "update_system";
-      update-pi = "update_pi";
     };
     initExtra = ''
+      # Resolve the live working tree rather than the immutable store snapshot
+      # that repoPath points at, run the update, and rebuild only if it changed
+      # something.
       _nixway_update() {
         local repo
         repo="$(git rev-parse --show-toplevel 2>/dev/null)" || {
@@ -108,26 +112,57 @@ in
           return 1
         }
         cd "$repo" || return
-        nix flake update --accept-flake-config "$@" &&
+        "$@" &&
           if [[ -z "$(git status --porcelain)" ]]; then
-            echo "Inputs are already up to date; nothing to rebuild."
+            echo "Inputs and pins are already up to date; nothing to rebuild."
           else
             rebuild
           fi
       }
       readonly -f _nixway_update
 
-      update_kernel() ( _nixway_update nix-cachyos-kernel )
+      # pi tracks the `pi` flake input, so its version needs no bump: only the
+      # npm dependency cache and the prebuilt model-data tarball move.
+      # OpenChamber publishes a registry tarball built with bun and no lockfile,
+      # so nix-update regenerates the vendored lockfile and derives version and
+      # hashes from upstream.
+      _refresh_agent_pins() {
+        nix-update --flake pi --version=skip --no-src --custom-dep modelData &&
+          nix-update --flake openchamber --generate-lockfile
+      }
+      readonly -f _refresh_agent_pins
+
+      # PrismML tags its ROCm binaries as prism-<build>-<rev>; the package
+      # stores the bare <build>-<rev> so the download URL can be composed.
+      _refresh_ai_pins() {
+        nix-update --flake llama-cpp-prism --version-regex 'prism-(.*)'
+      }
+      readonly -f _refresh_ai_pins
+
+      _update_agents() {
+        nix flake update --accept-flake-config llm-agents pi &&
+          _refresh_agent_pins
+      }
+      readonly -f _update_agents
+
+      _update_system() {
+        nix flake update --accept-flake-config nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents pi &&
+          _refresh_agent_pins &&
+          _refresh_ai_pins
+      }
+      readonly -f _update_system
+
+      update_kernel() ( _nixway_update nix flake update --accept-flake-config nix-cachyos-kernel )
       readonly -f update_kernel
 
-      update_ai() ( _nixway_update llm-agents )
+      update_ai() ( _nixway_update _refresh_ai_pins )
       readonly -f update_ai
 
-      update_system() ( _nixway_update nixpkgs nixpkgs-unstable home-manager nix-cachyos-kernel llm-agents )
-      readonly -f update_system
+      update_agents() ( _nixway_update _update_agents )
+      readonly -f update_agents
 
-      update_pi() ( _nixway_update pi )
-      readonly -f update_pi
+      update_system() ( _nixway_update _update_system )
+      readonly -f update_system
     '';
   };
 

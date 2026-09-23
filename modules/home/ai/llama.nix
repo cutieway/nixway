@@ -3,39 +3,7 @@
 let
   llamaCpp = pkgs.llama-cpp-rocm;
 
-  llamaCppPrism = pkgs.stdenvNoCC.mkDerivation {
-    pname = "llama-cpp-prism";
-    version = "prism-b9596-9fcaed7";
-
-    src = pkgs.fetchzip {
-      url = "https://github.com/PrismML-Eng/llama.cpp/releases/download/prism-b9596-9fcaed7/llama-prism-b9596-9fcaed7-bin-ubuntu-rocm-7.2-x64.tar.gz";
-      hash = "sha256-UJA2c4QF9Xlqnr292h3gOnzXJJRPr7K0cuPQUB4tsfU=";
-    };
-
-    nativeBuildInputs = [ pkgs.autoPatchelfHook ];
-    buildInputs = with pkgs; [
-      openssl
-      gcc.cc.lib
-      rocmPackages.clr
-      rocmPackages.hipblas
-      rocmPackages.rocblas
-    ];
-
-    installPhase = ''
-      mkdir -p $out/bin
-      for f in llama-* rpc-server; do
-        test -f "$f" -a -x "$f" && cp -a "$f" $out/bin/
-      done
-      for f in lib*.so*; do
-        test -f "$f" && cp -a "$f" $out/bin/
-      done
-    '';
-
-    meta = {
-      description = "PrismML fork of llama.cpp with ternary kernel support (ROCm)";
-      platforms = [ "x86_64-linux" ];
-    };
-  };
+  llamaCppPrism = pkgs.callPackage ../../../packages/llama-cpp-prism.nix { };
 
   llm = pkgs.writeShellApplication {
     name = "llm";

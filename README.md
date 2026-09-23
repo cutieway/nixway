@@ -416,9 +416,10 @@ The `-free` models stay blocked outside OpenCode whatever the balance.
 
 Add future agents beside Hermes in `modules/home/ai/agents.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
-tool. Use `update-ai` to advance that shared input and rebuild all selected
-agent packages together. AI tools remain separate from routine system updates
-so an upstream agent build failure cannot block OS and desktop updates.
+tool. Use `update-agents` to advance that shared input, refresh pi's and
+OpenChamber's locally packaged pins, and rebuild all selected agent packages
+together. AI tools remain separate from routine system updates so an upstream
+agent build failure cannot block OS and desktop updates.
 
 ### Local llama.cpp models
 
@@ -503,26 +504,28 @@ nix flake check --accept-flake-config
 nh os build --accept-flake-config
 ```
 
-From the repository checkout, update Nixpkgs, Home Manager, and the CachyOS
-kernel input, then rebuild:
+From the repository checkout, update every input and locally packaged AI pin,
+then rebuild:
 
 ```bash
 update-system
 ```
 
-If the selected inputs and working tree are already unchanged, `update-system`
-exits after checking them instead of evaluating and switching the same system
-again. An actual input update can still download a large new closure even when
-the configuration files did not change; Nix reuses unchanged store paths. The
+If the selected inputs, package pins, and working tree are already unchanged,
+`update-system` exits after checking them instead of evaluating and switching
+the same system again. An actual input update can still download a large new
+closure even when the configuration files did not change; Nix reuses unchanged
+store paths. The
 update commands resolve the checkout from the current directory so that they
 write its `flake.lock`, never the immutable source snapshot of the active
 generation.
 
-Use `update-kernel` for only the CachyOS kernel input, `update-ai` to update the
-`llm-agents.nix` input (the Hermes Agent and the OpenCode CLI) and rebuild,
-`update-pi` to pull the latest pi-coding-agent tag and rebuild it, or
-`update-mudfish VERSION` to stage and review a Mudfish release. Ordinary rebuilds
-leave `flake.lock` unchanged.
+Use `update-kernel` for only the CachyOS kernel input, `update-ai` to refresh
+only the llama.cpp PrismML build, `update-agents` to update pi, Hermes,
+OpenCode, and OpenChamber, or `update-mudfish VERSION` to stage and review a
+Mudfish release. `update-system` is the umbrella that updates every input plus
+the locally packaged AI pins above. Ordinary rebuilds leave `flake.lock`
+unchanged.
 
 Discover does not update the declarative NixOS system. Use the commands above
 for OS and package updates; Discover may still surface firmware updates through
