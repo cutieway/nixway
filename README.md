@@ -408,9 +408,11 @@ none — and selected in the AI bundle; run `openchamber` while an OpenCode
 server is reachable.
 
 CCR (`ccr`) stays installed from `packages/claude-code-router.nix` (v3.0.7)
-but is deliberately left unconfigured and is not wired to OpenCode Zen. It is
-kept for a future provider; run `ccr ui` once one whose API accepts external
-clients is available.
+but is deliberately left unconfigured and is not wired to OpenCode Zen. Zen's
+*free* tier is OpenCode-client-only, but its **paid** pay-as-you-go tier is a
+normal API provider — Zen advertises it as "use with any agent" — so a funded
+Zen balance is a valid future provider: run `ccr ui` and pick a paid model.
+The `-free` models stay blocked outside OpenCode whatever the balance.
 
 Add future agents beside Hermes in `modules/home/ai/agents.nix`; they use
 the same input and binary cache instead of requiring a flake input for every
